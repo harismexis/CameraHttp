@@ -70,4 +70,6 @@
 	<string name="no_places">No places</string>
 	<string name="send_via_http">Send via HTTP?</string>
 	<string name="no_server_response">No server response</string>
+	<string name="connection_to_google_play_services_failed">Connection to Google Play Services failed!</string>
+	<string name="connection_to_google_play_services_suspended">Connection to Google Play Services suspended!</string>
 </resources>
