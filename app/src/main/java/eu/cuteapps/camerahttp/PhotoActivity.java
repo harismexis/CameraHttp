@@ -115,14 +115,12 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
   private Location mLastLocation;
   private GoogleApiClient mGoogleApiClient;
 
-  /* flash */
   private boolean isFlashModeSupported = false;
   private boolean isFlashModeAUTOSupported = false;
   private boolean isFlashModeONSupported = false;
   private boolean isFlashModeOFFSupported = false;
   private boolean isFlashOn = false;
 
-  /* zoom */
   private SeekBar zoomBar;
   private LinearLayout mZoomBarLayout;
   private TextView minZoomTextView;
@@ -130,7 +128,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
   private int defaultZoom;
   private int maxZoom;
 
-  /* exposure compensation */
   private SeekBar brightnessBar;
   private LinearLayout mBrightnessBarLayout;
   private TextView minBrightnessTextView;
@@ -139,36 +136,30 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
   private int minExposureCompensation;
   private int defaultExposureCompensation;
 
-  /* white balance */
   private ListView mListViewWhiteBalance;
   private List<String> mSupportedWhiteBalanceList;
   private String defaultWhiteBalance;
 
-  /* color effects */
   private ListView mListViewColorEffects;
   private List<String> mSupportedColorEffectsList;
   private String defaultColorEffect;
 
-  /* scene mode */
   private ListView mListViewSceneModes;
   private List<String> mSupportedSceneModesList;
   private String defaultSceneMode;
 
-  /* picture size */
   private ListView mListViewPictureSizes;
   private List<Size> mSupportedPictureSizesList;
   private ArrayList<String> mPictureSizes;
   private Size defaultPictureSize;
   private Size selectedPictureSize;
 
-  /* video size */
   private ListView mListViewVideoSizes;
   private List<Size> mSupportedVideoSizesList;
   private ArrayList<String> mVideoSizes;
   private Size defaultVideoSize;
   private Size selectedVideoSize;
 
-  /* boolean vars to check which parameters are supported */
   private boolean isZoomSupported = false;
   private boolean isExposureCompensationSupported = false;
   private boolean isSceneModeSupported = false;
@@ -182,11 +173,9 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
   private ImageButton btnZoom;
   private ImageButton btnReverse;
 
-  /* audio capture */
   private ImageButton btnAudioCapture;
   private boolean isAudioRecording = false;
 
-  /* camera / preview / take picture */
   private ImageButton buttonTakePicture;
   private Camera mCamera;
   private CameraPreview mPreview;
@@ -214,7 +203,7 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
   private boolean isVideoCameraMode = false;
   private ImageButton switchPhotoVideoBtn;
 
-  /* ListView with captured places */
+  /* ListView with captures */
   private ListView mListViewCaptures;
   private MySQLiteCapturesDataSource datasource;
   private ArrayList<Capture> allCaptures;
@@ -1049,17 +1038,17 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
     final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
     mCamera.stopPreview();
     Parameters p = mCamera.getParameters();
-		/* Restore Camera Effects (but not when app is first launched) */
+		/* Restore Camera Effects */
     if(!restoreCameraEffectsInOnResume) {
       restoreCameraEffectsInOnResume = true;
     } else {
-			/* Restore Zoom */
+
       if(isZoomSupported) {
         final int lastZoom = prefs.getInt(Prefs.PREF_ZOOM, defaultZoom);
         p.setZoom(lastZoom);
         zoomBar.setProgress(lastZoom);
       }
-			/* Restore Brightness */
+
       if(isExposureCompensationSupported) {
         final int lastExposureCompensation = prefs
             .getInt(Prefs.PREF_EXPOSURE_COMPENSATION, defaultExposureCompensation);
@@ -1067,19 +1056,19 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
         final int lastBrightnessProgressValue = lastExposureCompensation + Math.abs(minExposureCompensation);
         brightnessBar.setProgress(lastBrightnessProgressValue);
       }
-			/* Restore Scene Mode */
+
       if(isSceneModeSupported) {
         final String lastSceneMode = prefs.getString(Prefs.PREF_SCENE_MODE, defaultSceneMode);
         p.setSceneMode(lastSceneMode);
         mListViewSceneModes.setItemChecked(mSupportedSceneModesList.indexOf(lastSceneMode), true);
       }
-			/* Restore White Balance */
+
       if(isWhiteBalanceSupported) {
         final String lastWhiteBalance = prefs.getString(Prefs.PREF_WHITE_BALANCE, defaultWhiteBalance);
         p.setWhiteBalance(lastWhiteBalance);
         mListViewWhiteBalance.setItemChecked(mSupportedWhiteBalanceList.indexOf(lastWhiteBalance), true);
       }
-			/* Restore Color Effect */
+
       if(isColorEffectSupported) {
         final String lastColorEffect = prefs.getString(Prefs.PREF_COLOR_EFFECT, defaultColorEffect);
         p.setColorEffect(lastColorEffect);
@@ -1089,6 +1078,7 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
 		
 		/* Restore camera mode (photo / video) */
     isVideoCameraMode = prefs.getBoolean(Prefs.PREF_IS_VIDEO_CAMERA_MODE, false);
+
     mCamera.setParameters(p);
 
     restorePictureAndVideoSize();
@@ -1223,81 +1213,65 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
   private void resetCameraSettingsAndSettingsViews() {
     mCamera.stopPreview();
     Parameters parameters = mCamera.getParameters();
-		/* Reset Flash Mode */
     if(isFlashModeSupported) {
       parameters.setFlashMode(Parameters.FLASH_MODE_OFF);
     }
-		/* Reset Zoom */
     if(isZoomSupported) {
       parameters.setZoom(defaultZoom);
       zoomBar.setProgress(defaultZoom);
     }
-		/* Reset Exposure */
     if(isExposureCompensationSupported) {
       parameters.setExposureCompensation(defaultExposureCompensation);
       brightnessBar.setProgress(defaultExposureCompensation + Math.abs(minExposureCompensation));
     }
-		/* Reset Scene Mode */
     if(isSceneModeSupported) {
       parameters.setSceneMode(defaultSceneMode);
       mListViewSceneModes.setItemChecked(mSupportedSceneModesList.indexOf(defaultSceneMode), true);
     }
-		/* Reset White Balance */
     if(isWhiteBalanceSupported) {
       parameters.setWhiteBalance(defaultWhiteBalance);
       mListViewWhiteBalance.setItemChecked(mSupportedWhiteBalanceList.indexOf(defaultWhiteBalance), true);
     }
-		/* Reset Color Effect */
     if(isColorEffectSupported) {
       parameters.setColorEffect(defaultColorEffect);
       mListViewColorEffects.setItemChecked(mSupportedColorEffectsList.indexOf(defaultColorEffect), true);
     }
-		/* Reset Picture Size */
     if(isPictureSizeSupported) {
       final String defaultPictureSizeToString = String.valueOf(defaultPictureSize.width) +
           " x " + String.valueOf(defaultPictureSize.height);
       mListViewPictureSizes.setItemChecked(mPictureSizes.indexOf(defaultPictureSizeToString), true);
     }
-		/* Reset Video Size */
     if(isVideoSizeSupported) {
       final String defaultVideoSizeToString = String.valueOf(defaultVideoSize.width) +
           " x " + String.valueOf(defaultVideoSize.height);
       mListViewVideoSizes.setItemChecked(mVideoSizes.indexOf(defaultVideoSizeToString), true);
     }
-
     mCamera.setParameters(parameters);
     mCamera.startPreview();
   }
 
   /* Sets camera settings views to default */
   private void resetCameraSettingsViews() {
-		/* Set Zoom to default */
     if(isZoomSupported) {
       zoomBar.setProgress(defaultZoom);
     }
-		/* Set Exposure Compensation to default */
     if(isExposureCompensationSupported) {
       brightnessBar.setProgress(defaultExposureCompensation);
     }
-		/* Set Scene Mode to default */
     if(isSceneModeSupported) {
       mListViewSceneModes.setItemChecked(mSupportedSceneModesList.indexOf(defaultSceneMode), true);
     }
-		/* Set White Balance to default */
     if(isWhiteBalanceSupported) {
       mListViewWhiteBalance.setItemChecked(mSupportedWhiteBalanceList.indexOf(defaultWhiteBalance), true);
     }
-		/* Set Color Effect to default */
     if(isColorEffectSupported) {
       mListViewColorEffects.setItemChecked(mSupportedColorEffectsList.indexOf(defaultColorEffect), true);
     }
-		/* Set Picture Size to default */
     if(isPictureSizeSupported) {
       final String defaultPictureSizeToString = String.valueOf(defaultPictureSize.width) +
           " x " + String.valueOf(defaultPictureSize.height);
       mListViewPictureSizes.setItemChecked(mPictureSizes.indexOf(defaultPictureSizeToString), true);
     }
-		/* Set Video Size to default */
     if(isVideoSizeSupported) {
       final String defaultVideoSizeToString = String.valueOf(defaultVideoSize.width) +
           " x " + String.valueOf(defaultVideoSize.height);
@@ -1309,7 +1283,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
   private void restorePreferences() {
     final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
 		
-		/* Interval for periodic capture */
     try {
       periodicCaptureInterval = 1000 * Integer.parseInt(settings
           .getString(Prefs.PREF_PERIODIC_CAPTURE_INTERVAL, "2"));
@@ -1317,7 +1290,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
       periodicCaptureInterval = 2000;
     }
 		
-		/* Time delay after capture */
     try {
       delayAfterCapture = 1000 * Integer.parseInt(settings
           .getString(Prefs.PREF_DELAY_AFTER_CAPTURE, "1"));
@@ -1325,21 +1297,16 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
       delayAfterCapture = 1000;
     }
 		
-		/* Shutter sound enabled / disabled */
     final String shutter = settings.getString(Prefs.PREF_SHUTTER_SOUND, "enabled");
     isShutterSoundEnabled = shutter.equals("enabled");
   }
-	
-	/* Location related callbacks */
 
   @Override
   public void onConnected(Bundle connectionHint) {
-    // Connected to Google Play services! The good stuff goes here.
-    /* Get the last known location */
-    if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) !=
-        PackageManager.PERMISSION_GRANTED &&
-        ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) !=
-            PackageManager.PERMISSION_GRANTED) {
+    if(ActivityCompat.checkSelfPermission(this,
+        android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+        ActivityCompat.checkSelfPermission(this,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
       // TODO: Consider calling
       //    ActivityCompat#requestPermissions
       // here to request the missing permissions, and then overriding
@@ -1350,7 +1317,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
       return;
     }
     mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-    /* Start Location updates */
     LocationRequest mLocationRequest = new LocationRequest();
     mLocationRequest.setInterval(Constants.LOCATION_UPDATE_INTERVAL);
     mLocationRequest.setFastestInterval(Constants.LOCATION_UPDATE_FASTEST_INTERVAL);
@@ -1416,8 +1382,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
     mGoogleApiClient.disconnect();
     super.onStop();
   }
-	
-	/* End : Location related callbacks */
 
   @Override
   public void onBackPressed() {
@@ -1425,10 +1389,7 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
       super.onBackPressed();
     }
   }
-	
-	/* Camera and settings */
 
-  /* Returns a new camera instance (back / front) */
   private Camera getCameraInstance(int cameraId) {
     Camera camera;
     try {
@@ -1439,7 +1400,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
     return camera;
   }
 
-  /* Inits Camera and camera preview */
   private void initCameraAndPreview() {
     final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
     isFacingBackCamera = prefs.getBoolean(Prefs.PREF_IS_FACING_BACK_CAMERA, true);
@@ -1475,7 +1435,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
       return;
     }
     try {
-			/* Save Photo Camera Flash Mode */
       if(!isVideoCameraMode && isFacingBackCamera) {
         final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = settings.edit();
@@ -1511,21 +1470,17 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
       Toast.makeText(this, getString(R.string.error_reversing_camera), Toast.LENGTH_LONG).show();
     }
   }
-	
-	/* End : Camera and settings */
 
   private boolean isPreviewBusy() {
     return isCapturingPhoto || isAudioRecording || isVideoRecording || isPeriodicCaptureOn;
   }
 
-  /* Shutter callback for playing sound on photo capture */
   private final ShutterCallback mShutterCallback = new ShutterCallback() {
     public void onShutter() {
       audioManager.playSoundEffect(AudioManager.FLAG_PLAY_SOUND);
     }
   };
 
-  /* Shutter callback for not playing sound on photo capture */
   private final ShutterCallback mSilentShutterCallback = new ShutterCallback() {
     public void onShutter() {
       audioManager.playSoundEffect(AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
@@ -1544,7 +1499,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
 
     @Override
     protected Void doInBackground(Void... params) {
-			/* Take picture */
       if(!isShutterSoundEnabled) {
         audioManager.setStreamMute(AudioManager.STREAM_SYSTEM, true);
         mCamera.takePicture(mSilentShutterCallback, null, mPictureCallback);
@@ -1552,7 +1506,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
         mCamera.takePicture(mShutterCallback, null, mPictureCallback);
       }
 			
-			/* Preview delay */
       try {
         Thread.sleep(delayAfterCapture);
       } catch(InterruptedException e) {
@@ -1562,15 +1515,11 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
 			/* Store Location to database */
       final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(PhotoActivity.this);
       if(settings.getString(Prefs.PREF_STORE_CAPTURES_TO_DB, "yes").equals("yes")) {
-				
-				/* Add new capture to database */
         boolean captureSavedSuccessfully = datasource.addCaptureToDatabase(
             LocationUtils.getStringLatitude(mLastLocation),
             LocationUtils.getStringLongitude(mLastLocation),
             Capture.TYPE_IMAGE,
             lastCapturedMediaFile.getAbsolutePath());
-				
-				/* Refresh list with all captures */
         if(captureSavedSuccessfully) {
           allCaptures.clear();
           allCaptures.addAll(datasource.getAllModels());
@@ -1664,7 +1613,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
   }
 
   private void restoreLastCapturedMediaAndSetThumbnail() {
-		/* Get the saved path of last capture photo */
     if(lastCapturedMediaFile == null) {
       final String path = PreferenceManager.getDefaultSharedPreferences(PhotoActivity.this)
           .getString(Prefs.PREF_LAST_CAPTURED_FILE_PATH, null);
@@ -1676,7 +1624,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
 		
 		/* If last captured photo does not exist, get the last picture from storage folder */
     if(lastCapturedMediaFile == null || !lastCapturedMediaFile.exists()) {
-
       try {
         final File folder = new File(Environment.getExternalStoragePublicDirectory(
             Environment.DIRECTORY_PICTURES), Constants.MEDIA_FOLDER_NAME);
@@ -1687,8 +1634,7 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
           lastCapturedMediaFile = null;
         }
       } catch(Exception e) {
-        Toast.makeText(this, getString(R.string.error_restoring_thumbnail_icon),
-            Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, getString(R.string.error_restoring_thumbnail_icon), Toast.LENGTH_SHORT).show();
         return;
       }
     }
@@ -1713,7 +1659,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
     mImageView.setImageDrawable(ContextCompat.getDrawable(this, R.mipmap.mic_dark));
   }
 
-  /* Creates thumbnail from video file (MICRO_KIND: 96 x 96) */
   private void setThumbnailPicFromVideo() {
     if(lastCapturedMediaFile != null) {
       final Bitmap bmThumbnail = ThumbnailUtils.createVideoThumbnail(lastCapturedMediaFile.getAbsolutePath(),
@@ -1828,7 +1773,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
 
   /* Async Task that updates location info and current capture */
   private class UpdatePositionInfoAndCaptureTask extends AsyncTask<String, Void, Boolean> {
-
     @Override
     protected Boolean doInBackground(String... params) {
 			/* Update capture in database, and get captures from database */
@@ -1956,7 +1900,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
       Toast.makeText(this, getString(R.string.camera_is_busy), Toast.LENGTH_SHORT).show();
       return;
     }
-
     if(frameLayout.findViewById(R.id.the_zoom_layout) != null) {
       frameLayout.removeView(mZoomBarLayout);
     } else {
@@ -2020,8 +1963,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
   }
 
   // -- end : handle camera settings --
-
-  // -- options menu --
 
   @Override
   public boolean onPrepareOptionsMenu(Menu menu) {
@@ -2143,8 +2084,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
 
     return super.onPrepareOptionsMenu(menu);
   }
-	
-	/* Context Menu */
 
   @Override
   public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
@@ -2246,10 +2185,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
         return super.onContextItemSelected(item);
     }
   }
-	
-	/* End : Context Menu */
-	
-	/* Options Menu */
 
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
@@ -2262,7 +2197,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
   public boolean onOptionsItemSelected(MenuItem item) {
     switch(item.getItemId()) {
 			
-			/* all captures */
       case R.id.mycamera_menu_all_captures:
         if(allCaptures == null || allCaptures.size() <= 0) {
           Toast.makeText(this, getString(R.string.no_places), Toast.LENGTH_SHORT).show();
@@ -2278,7 +2212,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
         }
         return true;
 
-			/* picture size / video */
       case R.id.mycamera_menu_picture_size:
         if(!isVideoCameraMode) {
           if(frameLayout.findViewById(R.id.picture_sizes_list_view) != null) {
@@ -2299,7 +2232,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
         }
         return true;
 
-			/* white balance */
       case R.id.mycamera_menu_white_balance:
         if(frameLayout.findViewById(R.id.white_balance_list_view) != null) {
           frameLayout.removeView(mListViewWhiteBalance);
@@ -2310,7 +2242,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
         }
         return true;
 
-			/* color effect */
       case R.id.mycamera_menu_color_effect:
         if(frameLayout.findViewById(R.id.color_effects_list_view) != null) {
           frameLayout.removeView(mListViewColorEffects);
@@ -2321,7 +2252,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
         }
         return true;
 
-			/* scene mode */
       case R.id.mycamera_menu_scene_mode:
         if(frameLayout.findViewById(R.id.scene_modes_list_view) != null) {
           frameLayout.removeView(mListViewSceneModes);
@@ -2332,7 +2262,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
         }
         return true;
 
-			/* flash auto */
       case R.id.mycamera_menu_flash_auto:
         item.setChecked(true);
         Parameters p = mCamera.getParameters();
@@ -2345,7 +2274,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
         mCamera.startPreview();
         return true;
 
-			/* flash on */
       case R.id.mycamera_menu_flash_on:
         item.setChecked(true);
         if(isVideoCameraMode) {
@@ -2362,7 +2290,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
         }
         return true;
 
-			/* flash off */
       case R.id.mycamera_menu_flash_off:
         item.setChecked(true);
         if(isVideoCameraMode) {
@@ -2380,7 +2307,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
         }
         return true;
 
-			/* exposure compensation */
       case R.id.mycamera_menu_exposure_comp:
         if(frameLayout.findViewById(R.id.the_brightness_bar_layout) != null) {
           frameLayout.removeView(mBrightnessBarLayout);
@@ -2391,7 +2317,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
         }
         return true;
 
-			/* show left controls */
       case R.id.mycamera_menu_left_controls_show:
         if(this.findViewById(R.id.activity_photo_left_controls) == null) {
           activityLayout.addView(leftControlsLayout, 0);
@@ -2399,7 +2324,6 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
         }
         return true;
 
-			/* hide left controls */
       case R.id.mycamera_menu_left_controls_hide:
         if(this.findViewById(R.id.activity_photo_left_controls) != null) {
           activityLayout.removeView(leftControlsLayout);
@@ -2407,32 +2331,25 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
         }
         return true;
 
-			/* reset camera */
       case R.id.mycamera_menu_reset_camera:
         showAlertDialogToResetCamera();
         return true;
 
-			/* application settings */
       case R.id.mycamera_menu_app_settings:
         startActivity(new Intent(this, PrefsActivity.class));
         return true;
 
-			/* device settings */
       case R.id.mycamera_menu_device_settings:
         startActivity(new Intent(Settings.ACTION_SETTINGS));
-        // CamcorderProfile profile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH);
-        // CamcorderProfile profile = CamcorderProfile.get(Camera.CameraInfo.CAMERA_FACING_FRONT, CamcorderProfile.QUALITY_HIGH);
         return true;
 
       default:
         return super.onOptionsItemSelected(item);
     }
   }
-	/* End : Options Menu */
-	
+
 	/* -- send http -- */
 
-  /* Shows alert dialog when user presses to reset camera */
   private void showAlertDialogToSendHTTP() {
     final AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
     alertDialog.setMessage(getString(R.string.send_via_http));
