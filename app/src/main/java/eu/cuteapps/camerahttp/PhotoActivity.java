@@ -100,7 +100,7 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
     GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
   private int videoCameraFlashMode = Constants.VIDEO_CAMERA_FLASH_MODE_OFF;
-  private int periodicCaptureInterval;
+
   private SendCaptureViaHttpTask sendCaptureViaHttpTask;
   private ProgressDialog sendCaptureViaHttpProgressDialog;
   private HttpPost httpPost;
@@ -183,11 +183,11 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
   private boolean isCapturingPhoto = false;
   private ImageView mImageView;
   private CapturePhotoTask capturePhotoTask;
-  private ProgressDialog cameraProgressDialog;
+  private ProgressDialog cameraPhotoCaptureProgressDialog;
   private int thumbNailTargetWidth;
   private int thumbNailTargetHeight;
 
-  /* periodic capture */
+  private int periodicCaptureInterval;
   private AlarmManager alarmManager;
   private Intent periodicCaptureIntent;
   private PendingIntent periodicCapturePendingIntent;
@@ -196,14 +196,12 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
   private boolean infinitePeriodicCapture = false;
   private ImageButton periodicCaptureButton;
 
-  /* video capture */
   private ImageButton videoButton;
   private MediaRecorder mMediaRecorder;
   private boolean isVideoRecording = false;
   private boolean isVideoCameraMode = false;
   private ImageButton switchPhotoVideoBtn;
 
-  /* ListView with captures */
   private ListView mListViewCaptures;
   private MySQLiteCapturesDataSource datasource;
   private ArrayList<Capture> allCaptures;
@@ -244,10 +242,9 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
       }
     });
 
-		/* Progress Dialog appearing on photo capture */
-    cameraProgressDialog = MyProgressDialogs.getCircleProgressDialog(this,
+    cameraPhotoCaptureProgressDialog = MyProgressDialogs.getCircleProgressDialog(this,
         getString(R.string.capturing_photo));
-    cameraProgressDialog.setCancelable(false);
+    cameraPhotoCaptureProgressDialog.setCancelable(false);
 
     sendCaptureViaHttpProgressDialog = MyProgressDialogs
         .getCircleProgressDialog(this, getString(R.string.sending_capture_via_http));
@@ -310,8 +307,7 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
           }
 
           initCameraPreview();
-					
-					/* Update Video / Picture size */
+
           if(isVideoCameraMode) {
             final String selectedVideoSizeToString =
                 String.valueOf(selectedVideoSize.width) + " x " + String.valueOf(selectedVideoSize.height);
@@ -327,8 +323,7 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
                 String.valueOf(selectedPictureSize.width) + " x " + String.valueOf(selectedPictureSize.height);
             mListViewPictureSizes.setItemChecked(mPictureSizes.indexOf(selectedPictureSizeToString), true);
           }
-					
-					/* Update Flash Mode */
+
           if(!isVideoCameraMode && isFlashModeSupported) {
             final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(PhotoActivity.this);
             mCamera.stopPreview();
@@ -345,8 +340,7 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
     });
 
     buttonTakePicture = (ImageButton) this.findViewById(R.id.activity_photo_button_capture);
-		
-		/* Periodic photo capture */
+
     periodicCaptureButton = (ImageButton) findViewById(R.id.activity_photo_button_periodic_capture);
     periodicCaptureIntent = new Intent(Actions.ACTION_PERIODIC_CAPTURE);
     periodicCapturePendingIntent = PendingIntent.getBroadcast(this, 1, periodicCaptureIntent,
@@ -399,8 +393,7 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
             lastCapturedMediaFile = MyFileUtils.getOutputMediaFile(MyFileUtils.MEDIA_TYPE_VIDEO,
                 Constants.MEDIA_FOLDER_NAME);
             mMediaRecorder.setOutputFile(lastCapturedMediaFile.toString());
-            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
-                Uri.fromFile(lastCapturedMediaFile)));
+            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(lastCapturedMediaFile)));
 
             mMediaRecorder.setPreviewDisplay(mPreview.getHolder().getSurface());
             mMediaRecorder.prepare();
@@ -411,13 +404,10 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
                 Toast.LENGTH_SHORT).show();
             return;
           }
-//	            	Toast.makeText(PhotoActivity.this, 
-//        	 	    		String.valueOf(camcorderProfile.videoFrameWidth) + " x " + String.valueOf(camcorderProfile.videoFrameHeight), 
-//        	 	    		Toast.LENGTH_SHORT).show();
+
           videoButton.setImageResource(R.mipmap.stop);
           isVideoRecording = true;
-	        		
-          /* Update current capture */
+
           new UpdatePositionInfoAndCaptureTask().execute(Capture.TYPE_VIDEO);
         }
       }
@@ -534,7 +524,7 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
 
   private void createCameraSettingsViews() {
     final LayoutInflater layoutInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		
+
 		/* -- Zoom Bar -- */
     mZoomBarLayout = (LinearLayout) layoutInflater.inflate(R.layout.zoom_layout, null, false);
     mZoomBarLayout.setOnClickListener(new OnClickListener() {
@@ -569,7 +559,7 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
         mCamera.startPreview();
       }
     });
-		
+
 		/* -- Brightness Bar -- */
     mBrightnessBarLayout = (LinearLayout) layoutInflater.inflate(R.layout.brightness_bar_layout, null, false);
     mBrightnessBarLayout.setOnClickListener(new OnClickListener() {
@@ -1326,12 +1316,14 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
 
   @Override
   public void onConnectionFailed(ConnectionResult result) {
-    Toast.makeText(this, "Connection to Google Play Services failed!", Toast.LENGTH_LONG).show();
+    Toast.makeText(this, getString(R.string.connection_to_google_play_services_failed),
+        Toast.LENGTH_LONG).show();
   }
 
   @Override
   public void onConnectionSuspended(int cause) {
-    Toast.makeText(this, "Connection to Google Play Services suspended!", Toast.LENGTH_SHORT).show();
+    Toast.makeText(this, getString(R.string.connection_to_google_play_services_suspended),
+        Toast.LENGTH_SHORT).show();
   }
 
   @Override
@@ -1492,8 +1484,8 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
     protected void onPreExecute() {
       buttonTakePicture.setEnabled(false);
       isCapturingPhoto = true;
-//			if(cameraProgressDialog != null && !cameraProgressDialog.isShowing()) {
-//				cameraProgressDialog.show();
+//			if(cameraPhotoCaptureProgressDialog != null && !cameraPhotoCaptureProgressDialog.isShowing()) {
+//				cameraPhotoCaptureProgressDialog.show();
 //			}
     }
 
@@ -1530,8 +1522,8 @@ public class PhotoActivity extends Activity implements GoogleApiClient.Connectio
 
     @Override
     protected void onPostExecute(Void result) {
-//			if(cameraProgressDialog != null && cameraProgressDialog.isShowing()) {
-//				cameraProgressDialog.dismiss();
+//			if(cameraPhotoCaptureProgressDialog != null && cameraPhotoCaptureProgressDialog.isShowing()) {
+//				cameraPhotoCaptureProgressDialog.dismiss();
 //			}
       if(capturesAdapter != null) {
         capturesAdapter.notifyDataSetChanged();
