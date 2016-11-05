@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <string-array name="captureintervalsList">
+        <item>2 sec</item>
+        <item>4 sec</item>
+        <item>6 sec</item>
+        <item>8 sec</item>
+        <item>10 sec</item>
+    </string-array>
+	
+    <string-array name="captureintervalsValues">
+        <item>2</item>
+        <item>4</item>
+        <item>6</item>
+        <item>8</item>
+        <item>10</item>        
+    </string-array>
+    
+    <string-array name="delaysList">
+        <item>1 sec</item>
+        <item>2 sec</item>
+        <item>3 sec</item>       
+    </string-array>
+	
+    <string-array name="delaysValues">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>        
+    </string-array>
+    
+    <string-array name="shutterSoundList">
+        <item>Enabled</item>
+        <item>Disabled</item>       
+    </string-array>
+	
+    <string-array name="shutterSoundValues">
+        <item>enabled</item>
+        <item>disabled</item>    
+    </string-array>
+    
+    <string-array name="storeCapturesToDbList">
+        <item>Yes</item>
+        <item>No</item>       
+    </string-array>
+	
+    <string-array name="storeCapturesToDbValues">
+        <item>yes</item>
+        <item>no</item>    
+    </string-array>
+
+</resources>

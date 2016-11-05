@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/the_zoom_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:background="@drawable/background_view_rounded_single"
+        android:orientation="vertical"
+        android:visibility="visible" >
+ 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="@string/adjust_zoom"
+            android:textColor="#ffffff"
+            android:textSize="20sp" />
+
+        <SeekBar
+            android:id="@+id/the_zoom_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:progress="0"
+            android:progressDrawable="@drawable/progressbar"
+            android:secondaryProgress="0" />
+ 
+        <RelativeLayout
+            android:id="@+id/zoom_texts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:orientation="horizontal"
+            android:visibility="visible"
+            android:weightSum="12" >
+ 
+            <TextView
+                android:id="@+id/min_zoom_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:gravity="center_horizontal"
+                android:textColor="@android:color/white"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/max_zoom_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:gravity="center_horizontal"
+                android:textColor="@android:color/white"
+                android:textStyle="bold" />
+        </RelativeLayout>
+    </LinearLayout>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="white_balance_list_view" type="id"/>
+    <item name="color_effects_list_view" type="id"/>
+    <item name="scene_modes_list_view" type="id"/>
+    <item name="picture_sizes_list_view" type="id"/>
+    <item name="video_sizes_list_view" type="id"/>
+    <item name="captures_list_view" type="id"/>
+</resources>

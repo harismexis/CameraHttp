@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+    
+  <PreferenceCategory
+     android:title="HTTP settings"
+     android:summary="HTTP settings">
+        
+        <EditTextPreference
+            android:title="Server url"
+            android:summary="Remote server url"
+            android:key="server_url"
+            android:defaultValue="http://192.168.10.2/sendpictures/server.php" />    
+ </PreferenceCategory>
+ 
+ <PreferenceCategory
+     android:title="Camera settings"
+   	 android:summary="Camera settings">
+	  
+      <ListPreference
+	     android:key="periodic_capture_interval"
+	     android:title="Periodic capture interval" 
+	     android:summary="Periodic capture interval in seconds"
+	     android:defaultValue="2"
+	     android:entries="@array/captureintervalsList"
+         android:entryValues="@array/captureintervalsValues" />
+	  
+	  <ListPreference
+	      	android:key="delay_after_capture"
+            android:title="Delay after image capture"
+            android:summary="Delay after image capture in seconds"
+            android:defaultValue="1"
+            android:entries="@array/delaysList"
+            android:entryValues="@array/delaysValues" />
+	  
+	  <ListPreference
+	      	android:key="shutter_sound"
+            android:title="Shutter sound"
+            android:summary="Shutter sound on photo capture"
+            android:defaultValue="enabled"
+            android:entries="@array/shutterSoundList"
+            android:entryValues="@array/shutterSoundValues" />
+  </PreferenceCategory>
+  
+  <PreferenceCategory
+    android:title="Places settings"
+   	android:summary="Places settings">
+	  
+      <ListPreference
+      	   android:key="store_captures_to_db"
+           android:title="Store captures"
+           android:summary="Store captures in database"
+           android:defaultValue="yes"
+           android:entries="@array/storeCapturesToDbList"
+           android:entryValues="@array/storeCapturesToDbValues" />  	
+  </PreferenceCategory>
+  
+</PreferenceScreen>

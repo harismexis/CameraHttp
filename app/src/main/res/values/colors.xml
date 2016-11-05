@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="default_screen_bg">#20324a</color>
+    <color name="rounded_container_bg">#80000000</color>
+    <color name="rounded_container_border">#3b3f44</color>
+    <color name="light_gray_header_color">#646663</color>
+    <color name="image_border_start">#40990000</color>
+	<color name="image_border_end">#FF660000</color>
+	<color name="image_border_center">#FFFF3333</color>
+	<color name="default_back_color">#FFFF6666</color>
+    <color name="light_blue">#91A9B9</color>
+</resources>

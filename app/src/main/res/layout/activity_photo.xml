@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/activity_photo_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000"
+    android:baselineAligned="false"
+    android:orientation="horizontal">
+
+    <LinearLayout
+        android:id="@+id/activity_photo_left_controls"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:background="#4A4949"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="3dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageButton
+                android:id="@+id/activity_photo_button_zoom"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:contentDescription="@string/camera_img_btn"
+                android:onClick="onClickHandleZoom"
+                android:src="@mipmap/zoom"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageButton
+                android:id="@+id/activity_photo_button_reverse"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:contentDescription="@string/camera_img_btn"
+                android:onClick="onClickReverseCamera"
+                android:src="@mipmap/switch_camera"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageButton
+                android:id="@+id/activity_photo_button_audio_capture"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:contentDescription="@string/camera_img_btn"
+                android:onClick="onClickCaptureAudio"
+                android:src="@mipmap/mic"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/activity_photo_preview"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1">
+    </FrameLayout>
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:background="#4A4949"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="3dp">
+
+        <ImageButton
+            android:id="@+id/activity_photo_switch_video_photo_cam_btn"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="5dp"
+            android:contentDescription="@string/camera_img_btn"
+            android:src="@mipmap/switch_video_cam"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageButton
+                android:id="@+id/activity_photo_button_video"
+                android:layout_width="60dp"
+                android:layout_height="100dp"
+                android:contentDescription="@string/camera_img_btn"
+                android:src="@mipmap/red_rect"
+                android:visibility="gone"/>
+
+            <ImageButton
+                android:id="@+id/activity_photo_button_capture"
+                android:layout_width="60dp"
+                android:layout_height="100dp"
+                android:contentDescription="@string/camera_img_btn"
+                android:onClick="onClickCapturePhoto"
+                android:src="@mipmap/camera"/>
+
+            <ImageButton
+                android:id="@+id/activity_photo_button_periodic_capture"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginTop="10dp"
+                android:contentDescription="@string/camera_img_btn"
+                android:onClick="onClickStartPeriodicCapture"
+                android:src="@mipmap/repeat"/>
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/activity_photo_camera_thumbnail"
+            android:layout_width="@dimen/thumbnail_imageview_width"
+            android:layout_height="@dimen/thumbnail_imageview_height"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="5dp"
+            android:background="@drawable/mselector"
+            android:contentDescription="@string/thumbnail_desc"/>
+    </RelativeLayout>
+
+</LinearLayout>

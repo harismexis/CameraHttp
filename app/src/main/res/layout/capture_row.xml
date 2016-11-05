@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="5dp"
+    android:background="@drawable/listselector" >
+    
+    <ImageView
+        android:id="@+id/capture_row_icon"
+        android:layout_width="@dimen/list_row_imageview_width"
+	    android:layout_height="@dimen/list_row_imageview_height"
+	    android:scaleType="fitXY"
+	    android:layout_gravity="center_vertical" />
+    
+    <TextView
+        android:id="@+id/capture_row_text"
+        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>

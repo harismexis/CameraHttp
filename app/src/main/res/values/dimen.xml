@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="thumbnail_imageview_width">50dp</dimen>
+    <dimen name="thumbnail_imageview_height">50dp</dimen>
+    
+    <dimen name="list_row_imageview_width">40dp</dimen>
+    <dimen name="list_row_imageview_height">40dp</dimen>
+    
+    <dimen name="button_picture_height_max">100dp</dimen>
+    <dimen name="button_picture_height_min">50dp</dimen>
+</resources>
