@@ -1841,14 +1841,12 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     capturePhoto();
   }
 
-  /* Stops periodic photo capture */
   private void stopPeriodicCapture() {
     isPeriodicCaptureOn = false;
     infinitePeriodicCapture = false;
     periodicCaptureButton.setImageResource(R.mipmap.repeat);
   }
 
-  /* Shows alert dialog when user presses to reset camera */
   private void showAlertDialogForPeriodicCapture() {
     final AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
     alertDialog.setMessage("- Enter number of captures\n- Leave empty for continous capture");
@@ -1864,13 +1862,13 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
             try {
               counterPeriodicCapture = Integer.parseInt(input.getText().toString());
             } catch(Exception e) {
-              Toast.makeText(PhotoActivity.this, "Please enter a positive integer!",
+              Toast.makeText(PhotoActivity.this, R.string.please_enter_a_positive_integer,
                   Toast.LENGTH_SHORT).show();
               return;
             }
 
             if(counterPeriodicCapture <= 0) {
-              Toast.makeText(PhotoActivity.this, "Please enter a positive integer!",
+              Toast.makeText(PhotoActivity.this, R.string.please_enter_a_positive_integer,
                   Toast.LENGTH_SHORT).show();
               return;
             }
@@ -1892,12 +1890,8 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         });
     alertDialog.show();
   }
-	
-	/* End : Periodic capture */
 
-  /* Async Task that updates location info and current capture */
   private class UpdatePositionInfoAndCaptureTask extends AsyncTask<String, Void, Boolean> {
-
     @Override
     protected Boolean doInBackground(String... params) {
 			/* Update capture in database, and get captures from database */
@@ -1916,10 +1910,8 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
           allCaptures.clear();
           allCaptures.addAll(datasource.getAllModels());
         }
-
         return true;
       }
-
       return false;
     }
 
@@ -1929,18 +1921,15 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         capturesAdapter.notifyDataSetChanged();
       }
       if(!result) {
-        Toast.makeText(PhotoActivity.this, "Error saving Capture !", Toast.LENGTH_SHORT).show();
+        Toast.makeText(PhotoActivity.this, R.string.error_saving_capture, Toast.LENGTH_SHORT).show();
       }
     }
   }
 
-  /* Stops media recorder */
   private void stopVideoRecording() {
-
     mMediaRecorder.stop();
     releaseMediaRecorder();
-	    
-	    /* Turn off FLASH if active */
+    /* Turn off FLASH if active */
     if(isFlashModeSupported) {
       Parameters params = mCamera.getParameters();
       if(params.getFlashMode().equals(Parameters.FLASH_MODE_TORCH)) {
@@ -1950,14 +1939,11 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         mCamera.startPreview();
       }
     }
-
     videoButton.setImageResource(R.mipmap.red_rect);
     isVideoRecording = false;
-
     setThumbnailPicFromVideo();
   }
 
-  /* Releases media recorder */
   private void releaseMediaRecorder() {
     if(mMediaRecorder != null) {
       mMediaRecorder.reset();
@@ -1966,10 +1952,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       mCamera.lock(); /* lock camera for later use (take camera access back from MediaRecorder) */
     }
   }
-	
-	/* End : Video capture */
-	
-	/* Audio capture */
 
   public void onClickCaptureAudio(View view) {
     if(isAudioRecording) {
@@ -1981,7 +1963,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     }
   }
 
-  /* Releases audio recorder */
   private void releaseAudioRecorder() {
     if(mMediaRecorder != null) {
       mMediaRecorder.stop();
@@ -1990,7 +1971,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     }
   }
 
-  /* Stops media recorder */
   private void stopAudioRecording() {
     releaseAudioRecorder();
     btnAudioCapture.setImageResource(R.mipmap.mic);
@@ -1998,7 +1978,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     setThumbnailPicFromAudio();
   }
 
-  /* Starts media recorder for audio capture */
   private void startAudioRecording() {
     try {
       mMediaRecorder = new MediaRecorder();
@@ -2012,22 +1991,15 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       mMediaRecorder.start();
     } catch(Exception e) {
       releaseAudioRecorder();
-      Toast.makeText(this, "Error starting Audio recording !", Toast.LENGTH_SHORT).show();
+      Toast.makeText(this, R.string.error_starting_audio_recording, Toast.LENGTH_SHORT).show();
       return;
     }
 
     btnAudioCapture.setImageResource(R.mipmap.mic_stop);
     isAudioRecording = true;
-		
-	    /* Update current capture */
     new UpdatePositionInfoAndCaptureTask().execute(Capture.TYPE_AUDIO);
   }
-	
-	/* -- end : audio capture -- */
-    
-	/* -- Handle camera settings -- */
 
-  /* Hide / Show Zoom Bar */
   public void onClickHandleZoom(View view) {
     if(isPreviewBusy()) {
       Toast.makeText(this, R.string.camera_is_busy, Toast.LENGTH_SHORT).show();
@@ -2042,7 +2014,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     }
   }
 
-  /* Removes all camera settings views */
   private boolean removeSettingsViews() {
     if(frameLayout.findViewById(R.id.the_zoom_layout) != null) {
       frameLayout.removeView(mZoomBarLayout);
@@ -2072,32 +2043,27 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     return false;
   }
 
-  /* Shows alert dialog to reset camera */
   private void showAlertDialogToResetCamera() {
     final AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
-    alertDialog.setMessage("Reset camera settings?");
-    alertDialog.setPositiveButton("Yes",
+    alertDialog.setMessage(R.string.reset_camera_settings);
+    alertDialog.setPositiveButton(R.string.yes,
         new DialogInterface.OnClickListener() {
           public void onClick(DialogInterface dialog, int which) {
             try {
               resetCameraSettingsAndSettingsViews();
             } catch(Exception e) {
-              Toast.makeText(PhotoActivity.this, "Error reseting camera !",
+              Toast.makeText(PhotoActivity.this, R.string.error_resetting_camera,
                   Toast.LENGTH_SHORT).show();
             }
           }
         });
-    alertDialog.setNegativeButton("Cancel",
+    alertDialog.setNegativeButton(R.string.cancel,
         new DialogInterface.OnClickListener() {
           public void onClick(DialogInterface dialog, int which) {
           }
         });
     alertDialog.show();
   }
-
-  // -- end : handle camera settings --
-
-  // -- options menu --
 
   @Override
   public boolean onPrepareOptionsMenu(Menu menu) {
@@ -2214,9 +2180,9 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
 		/* Check Picture / Video Size */
     final MenuItem item = menu.findItem(R.id.mycamera_menu_picture_size);
     if(!isVideoCameraMode) {
-      item.setTitle("Picture size");
+      item.setTitle(R.string.picture_size);
     } else {
-      item.setTitle("Video size");
+      item.setTitle(R.string.video_size);
     }
 
     if(isPictureSizeSupported || isVideoSizeSupported) {
@@ -2245,16 +2211,14 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     }
     switch(item.getItemId()) {
 			
-			/* Send data via HTTP */
       case R.id.context_places_send:
         if(!NetUtils.isNetworkConnected(this)) {
-          Toast.makeText(this, "No Internet connection !", Toast.LENGTH_SHORT).show();
+          Toast.makeText(this, R.string.no_internet_connection, Toast.LENGTH_SHORT).show();
           return true;
         }
         showAlertDialogToSendHTTP();
         return true;
 				
-			/* Show place on Map */
       case R.id.context_places_map:
         String uri = null;
         try {
@@ -2262,7 +2226,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
           final float lon = Float.parseFloat(selectedPlace.getLongitude());
           uri = String.format(Locale.ENGLISH, "geo:%f,%f", lat, lon);
         } catch(Exception e) {
-          Toast.makeText(PhotoActivity.this, "Unknown location !", Toast.LENGTH_SHORT).show();
+          Toast.makeText(PhotoActivity.this, R.string.unknown_location, Toast.LENGTH_SHORT).show();
           return false;
         }
 
@@ -2270,13 +2234,12 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         if(intentToOpenMap.resolveActivity(getPackageManager()) != null) {
           startActivity(intentToOpenMap);
         } else {
-          Toast.makeText(PhotoActivity.this, "Unable to complete this action !",
+          Toast.makeText(PhotoActivity.this, R.string.unable_to_complete_this_action,
               Toast.LENGTH_SHORT).show();
         }
 
         return true;
 			
-			/* Delete selected place */
       case R.id.context_places_delete:
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
         alertDialog.setMessage("Delete selected Place ?");
