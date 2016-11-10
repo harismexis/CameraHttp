@@ -91,6 +91,8 @@ import eu.cuteapps.camerahttp.CameraPreview;
 import eu.cuteapps.camerahttp.R;
 import eu.cuteapps.camerahttp.constants.Actions;
 import eu.cuteapps.camerahttp.constants.Constants;
+import eu.cuteapps.camerahttp.constants.GalleryFileTypes;
+import eu.cuteapps.camerahttp.constants.HttpParams;
 import eu.cuteapps.camerahttp.constants.Prefs;
 import eu.cuteapps.camerahttp.myadapters.CapturesAdapter;
 import eu.cuteapps.camerahttp.mysqlite.Capture;
@@ -242,7 +244,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     activityLayout = (LinearLayout) this.findViewById(R.id.activity_photo_layout);
     leftControlsLayout = (LinearLayout) this.findViewById(R.id.activity_photo_left_controls);
     frameLayout = (FrameLayout) findViewById(R.id.activity_photo_preview);
-		
+
     frameLayout.setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(View v) {
@@ -253,7 +255,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     cameraProgressDialog = MyProgressDialogs.getCircleProgressDialog(this,
         getString(R.string.capturing_photo));
     cameraProgressDialog.setCancelable(false);
-		
+
     sendCaptureViaHttpProgressDialog = MyProgressDialogs.getCircleProgressDialog(this,
         getString(R.string.sending_capture_via_http));
     sendCaptureViaHttpProgressDialog.setOnCancelListener(new OnCancelListener() {
@@ -268,7 +270,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         }
       }
     });
-		
+
     mListViewCaptures = new ListView(this);
     allCaptures = datasource.getAllModels();
     capturesAdapter = new CapturesAdapter(this, allCaptures);
@@ -281,7 +283,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     btnZoom = (ImageButton) this.findViewById(R.id.activity_photo_button_zoom);
     btnReverse = (ImageButton) this.findViewById(R.id.activity_photo_button_reverse);
     btnAudioCapture = (ImageButton) this.findViewById(R.id.activity_photo_button_audio_capture);
-		
+
     switchPhotoVideoBtn = (ImageButton) this.findViewById(R.id.activity_photo_switch_video_photo_cam_btn);
     switchPhotoVideoBtn.setOnClickListener(new OnClickListener() {
       @Override
@@ -294,7 +296,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
           saveFlashMode();
           closeCameraAndPreview();
           resetCameraSettingsViews();
-					
+
 					/* Switch to photo camera mode */
           if(isVideoCameraMode) {
             switchPhotoVideoBtn.setImageResource(R.mipmap.switch_video_cam);
@@ -302,7 +304,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
             videoButton.setVisibility(View.GONE);
             buttonTakePicture.setVisibility(View.VISIBLE);
           }
-					/* Switch to video camera mode */
+          /* Switch to video camera mode */
           else {
             switchPhotoVideoBtn.setImageResource(R.mipmap.switch_photo_cam);
             periodicCaptureButton.setVisibility(View.GONE);
@@ -319,7 +321,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
           } else {
             mCamera = getCameraInstance(Camera.CameraInfo.CAMERA_FACING_FRONT);
           }
-					
+
           initCameraPreview();
 					
 					/* Update Video / Picture size */
@@ -361,14 +363,14 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         }
       }
     });
-		
+
     buttonTakePicture = (ImageButton) this.findViewById(R.id.activity_photo_button_capture);
-		
+
     periodicCaptureButton = (ImageButton) findViewById(R.id.activity_photo_button_periodic_capture);
     periodicCaptureIntent = new Intent(Actions.ACTION_PERIODIC_CAPTURE);
     periodicCapturePendingIntent = PendingIntent.getBroadcast(this, 1, periodicCaptureIntent,
         PendingIntent.FLAG_CANCEL_CURRENT);
-		
+
     videoButton = (ImageButton) findViewById(R.id.activity_photo_button_video);
     videoButton.setOnClickListener(new OnClickListener() {
       @Override
@@ -461,11 +463,11 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
 
         final Intent intent = new Intent(Intent.ACTION_VIEW);
         if(MyFileUtils.fileIsImage(lastCapturedMediaFile.getName())) {
-          intent.setDataAndType(Uri.fromFile(lastCapturedMediaFile), "image/*");
+          intent.setDataAndType(Uri.fromFile(lastCapturedMediaFile), GalleryFileTypes.TYPE_IMAGE);
         } else if(MyFileUtils.fileIsVideo(lastCapturedMediaFile.getName())) {
-          intent.setDataAndType(Uri.fromFile(lastCapturedMediaFile), "video/*");
+          intent.setDataAndType(Uri.fromFile(lastCapturedMediaFile), GalleryFileTypes.TYPE_VIDEO);
         } else if(lastCapturedMediaFile.getName().endsWith(".3gp")) {
-          intent.setDataAndType(Uri.fromFile(lastCapturedMediaFile), "audio/*");
+          intent.setDataAndType(Uri.fromFile(lastCapturedMediaFile), GalleryFileTypes.TYPE_AUDIO);
         } else {
           Toast.makeText(PhotoActivity.this, R.string.unknown_file_type,
               Toast.LENGTH_SHORT).show();
@@ -479,7 +481,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         startActivity(intent);
       }
     });
-		
+
     createCameraSettingsViews();
 		
 		/* Check if hardware supports front camera */
@@ -1551,7 +1553,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       }
 
       isFacingBackCamera = !isFacingBackCamera;
-			
+
       initCameraPreview();
       mCamera.stopPreview();
       readCameraSettingsAndSetUpSettingsViews(mCamera);
@@ -1607,7 +1609,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       } else {
         mCamera.takePicture(mShutterCallback, null, mPictureCallback);
       }
-			
+
       try {
         Thread.sleep(delayAfterCapture);
       } catch(InterruptedException e) {
@@ -1619,13 +1621,13 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
           .getDefaultSharedPreferences(PhotoActivity.this);
       if(settings.getString(Prefs.PREF_STORE_CAPTURES_TO_DB, "yes")
           .equals("yes")) {
-				
+
         boolean captureSavedSuccessfully = datasource.addCaptureToDatabase(
             LocationUtils.getStringLatitude(mLastLocation),
             LocationUtils.getStringLongitude(mLastLocation),
             Capture.TYPE_IMAGE,
             lastCapturedMediaFile.getAbsolutePath());
-				
+
         if(captureSavedSuccessfully) {
           allCaptures.clear();
           allCaptures.addAll(datasource.getAllModels());
@@ -1665,7 +1667,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         alarmManager.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + periodicCaptureInterval,
             periodicCapturePendingIntent);
       }
-
     }
   }
 
@@ -1770,7 +1771,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     if(lastCapturedMediaFile != null) {
       final Bitmap bmThumbnail = ThumbnailUtils
           .createVideoThumbnail(lastCapturedMediaFile.getAbsolutePath(),
-          Thumbnails.MICRO_KIND);
+              Thumbnails.MICRO_KIND);
       mImageView.setImageBitmap(bmThumbnail);
     }
   }
@@ -1861,11 +1862,11 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
           }
         });
     alertDialog.setNeutralButton(getString(R.string.infinite), new DialogInterface.OnClickListener() {
-          @Override
-          public void onClick(DialogInterface dialog, int which) {
-            startPeriodicCapture(true);
-          }
-        });
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        startPeriodicCapture(true);
+      }
+    });
     alertDialog.setNegativeButton(getString(R.string.cancel),
         new DialogInterface.OnClickListener() {
           public void onClick(DialogInterface dialog, int which) {
@@ -2192,7 +2193,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       return false;
     }
     switch(item.getItemId()) {
-			
+
       case R.id.context_places_send:
         if(!NetUtils.isNetworkConnected(this)) {
           Toast.makeText(this, R.string.no_internet_connection, Toast.LENGTH_SHORT).show();
@@ -2200,7 +2201,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         }
         showAlertDialogToSendHTTP();
         return true;
-				
+
       case R.id.context_places_map:
         String uri = null;
         try {
@@ -2221,7 +2222,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         }
 
         return true;
-			
+
       case R.id.context_places_delete:
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
         alertDialog.setMessage(getString(R.string.delete_selected_place));
@@ -2272,10 +2273,10 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         });
         alertDialogDeleteAll.setNegativeButton(getString(R.string.no),
             new DialogInterface.OnClickListener() {
-          public void onClick(DialogInterface dialog, int which) {
+              public void onClick(DialogInterface dialog, int which) {
 
-          }
-        });
+              }
+            });
         alertDialogDeleteAll.show();
         return true;
 
@@ -2298,7 +2299,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
 			/* all captures */
       case R.id.mycamera_menu_all_captures:
         if(allCaptures == null || allCaptures.size() <= 0) {
-          Toast.makeText(this, "No places", Toast.LENGTH_SHORT).show();
+          Toast.makeText(this, getString(R.string.no_places), Toast.LENGTH_SHORT).show();
           return true;
         }
         if(frameLayout.findViewById(R.id.captures_list_view) != null) {
@@ -2458,30 +2459,24 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
 			/* device settings */
       case R.id.mycamera_menu_device_settings:
         startActivity(new Intent(Settings.ACTION_SETTINGS));
-        // CamcorderProfile profile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH);
-        // CamcorderProfile profile = CamcorderProfile.get(Camera.CameraInfo.CAMERA_FACING_FRONT, CamcorderProfile.QUALITY_HIGH);
         return true;
 
       default:
         return super.onOptionsItemSelected(item);
     }
   }
-	/* End : Options Menu */
-	
-	/* -- send http -- */
 
-  /* Shows alert dialog when user presses to reset camera */
   private void showAlertDialogToSendHTTP() {
     final AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
-    alertDialog.setMessage("Send data via HTTP ?");
-    alertDialog.setPositiveButton("Send",
+    alertDialog.setMessage(getString(R.string.sending_capture_via_http));
+    alertDialog.setPositiveButton(getString(R.string.send),
         new DialogInterface.OnClickListener() {
           public void onClick(DialogInterface dialog, int which) {
             sendCaptureViaHttpTask = new SendCaptureViaHttpTask(selectedPlace);
             sendCaptureViaHttpTask.execute();
           }
         });
-    alertDialog.setNegativeButton("Cancel",
+    alertDialog.setNegativeButton(getString(R.string.cancel),
         new DialogInterface.OnClickListener() {
           public void onClick(DialogInterface dialog, int which) {
 
@@ -2490,10 +2485,8 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     alertDialog.show();
   }
 
-  /* Async task that sends Media and Location info to server */
   private class SendCaptureViaHttpTask extends AsyncTask<Void, Void, HttpResponse> {
-
-    private Capture capture = null;
+    private Capture capture;
 
     public SendCaptureViaHttpTask(Capture capture) {
       this.capture = capture;
@@ -2510,10 +2503,9 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         return null;
       }
 
-      HttpResponse res = null;
+      HttpResponse res;
       try {
         final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(PhotoActivity.this);
-
         final HttpClient httpClient = new DefaultHttpClient();
         final MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
@@ -2522,29 +2514,25 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         final String filePath = capture.getMediaFilePath();
         if(filePath != null) {
           final File file = new File(filePath);
-          if(file != null && file.exists()) {
+          if(file.exists()) {
             if(capture.getMediaType().equals(Capture.TYPE_IMAGE)) {
-              builder.addPart("image", new FileBody(file));
+              builder.addPart(HttpParams.HTTP_PARAM_NAME_IMAGE, new FileBody(file));
             } else if(capture.getMediaType().equals(Capture.TYPE_VIDEO)) {
-              builder.addPart("video", new FileBody(file));
+              builder.addPart(HttpParams.HTTP_PARAM_NAME_VIDEO, new FileBody(file));
             } else if(capture.getMediaType().equals(Capture.TYPE_AUDIO)) {
-              builder.addPart("audio", new FileBody(file));
+              builder.addPart(HttpParams.HTTP_PARAM_NAME_AUDIO, new FileBody(file));
             }
           }
         }
-				
-				/* Add Location */
-        builder.addTextBody("lat", String.valueOf(capture.getLatitude()));
-        builder.addTextBody("lon", String.valueOf(capture.getLongitude()));
-				
-				/* Create HTTP Post and set Entity */
-        httpPost = new HttpPost(settings.getString("server_url", null));
+
+        builder.addTextBody(HttpParams.HTTP_PARAM_NAME_LAT, String.valueOf(capture.getLatitude()));
+        builder.addTextBody(HttpParams.HTTP_PARAM_NAME_LON, String.valueOf(capture.getLongitude()));
+
+        httpPost = new HttpPost(settings.getString(Prefs.PREF_SERVER_URL, null));
         httpPost.setEntity(builder.build());
-				
-				/* Execute post request to the server */
+
         res = httpClient.execute(httpPost);
       } catch(Exception e) {
-        // TODO Auto-generated catch block
         return null;
       }
       return res;
@@ -2555,208 +2543,11 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       if(sendCaptureViaHttpProgressDialog != null && sendCaptureViaHttpProgressDialog.isShowing()) {
         sendCaptureViaHttpProgressDialog.dismiss();
       }
-
       if(result != null) {
         Toast.makeText(PhotoActivity.this, NetUtils.getResponseText(result), Toast.LENGTH_SHORT).show();
       } else {
-        Toast.makeText(PhotoActivity.this, "No response", Toast.LENGTH_SHORT).show();
+        Toast.makeText(PhotoActivity.this, getString(R.string.no_server_response), Toast.LENGTH_SHORT).show();
       }
     }
   }
 }
-
-///* Updates camera settings views */
-//private void setupCameraSettingsViews(Camera c) {
-//	Camera.Parameters p = c.getParameters();
-//	
-//	String msg = "";
-//	
-//	/* Update Zoom Bar */
-//	if(isZoomSupported && zoomBar != null) {
-//		maxZoomTextView.setText(String.valueOf(maxZoom));
-//		zoomBar.setMax(p.getMaxZoom());
-//		zoomBar.setProgress(defaultZoom);
-//	}
-//	else if(zoomBar == null) {
-//		msg += "Error updating zoom bar !";
-//	}
-//	
-//	/* Update Exposure Bar */
-//	if(isExposureCompensationSupported && brightnessBar != null) {
-//		minBrightnessTextView.setText(String.valueOf(minExposureCompensation));
-//		maxBrightnessTextView.setText(String.valueOf(maxExposureCompensation));
-//		final int barMax = Math.abs(minExposureCompensation) + Math.abs(maxExposureCompensation);
-//		brightnessBar.setMax(barMax);
-//		final int brightnessProgressValue = defaultExposureCompensation + Math.abs(minExposureCompensation);
-//		brightnessBar.setProgress(brightnessProgressValue);
-//	}
-//	else if(brightnessBar == null) {
-//		msg += "\n" + "Error updating brightness bar !";
-//	}
-//	
-//	/* Update Scene Modes ListView */
-//	if(isSceneModeSupported && mListViewSceneModes != null) {
-//		((ArrayAdapter<?>) mListViewSceneModes.getAdapter()).notifyDataSetChanged();
-//		mListViewSceneModes.setItemChecked(mSupportedSceneModesList.indexOf(defaultSceneMode), true);
-//	}
-//	else if(mListViewSceneModes == null) {
-//		msg += "\n" + "Error updating Scene Modes !";
-//	}
-//	
-//	/* Update White Balance ListView */
-//	if(isWhiteBalanceSupported && mListViewWhiteBalance != null) {
-//		((ArrayAdapter<?>) mListViewWhiteBalance.getAdapter()).notifyDataSetChanged();
-//		mListViewWhiteBalance.setItemChecked(mSupportedWhiteBalanceList.indexOf(defaultWhiteBalance), true);
-//	}
-//	else if(mListViewWhiteBalance == null) {
-//		msg += "\n" + "Error updating White Balance !";
-//	}
-//	
-//	/* Update Color Effects ListView */
-//	if(isColorEffectSupported && mListViewColorEffects != null) {
-//		((ArrayAdapter<?>) mListViewColorEffects.getAdapter()).notifyDataSetChanged();
-//		mListViewColorEffects.setItemChecked(mSupportedColorEffectsList.indexOf(defaultColorEffect), true);
-//	}
-//	else if(mListViewColorEffects == null) {
-//		msg += "\n" + "Error updating Color Effects !";
-//	}
-//	
-//	/* Update Picture Size ListView */
-//	if(isPictureSizeSupported && mListViewPictureSizes != null) {
-//		((ArrayAdapter<?>) mListViewPictureSizes.getAdapter()).notifyDataSetChanged();
-//		final String defaultPictureSizeToString = String.valueOf(defaultPictureSize.width) + " x " + String.valueOf(defaultPictureSize.height);
-//		mListViewPictureSizes.setItemChecked(mPictureSizes.indexOf(defaultPictureSizeToString), true);
-//	}
-//	else if(mListViewPictureSizes == null) {
-//		msg += "\n" + "Error updating Picture Size !";
-//	}
-//	
-//	/* Update Video Size ListView */
-//	if(isVideoSizeSupported && mListViewVideoSizes != null) {
-//		((ArrayAdapter<?>) mListViewVideoSizes.getAdapter()).notifyDataSetChanged();
-//		final String defaultVideoSizeToString = String.valueOf(defaultVideoSize.width) + " x " + String.valueOf(defaultVideoSize.height);
-//		mListViewVideoSizes.setItemChecked(mVideoSizes.indexOf(defaultVideoSizeToString), true);
-//	}
-//	else if(mListViewPictureSizes == null) {
-//		msg += "\n" + "Error updating Video Size !";
-//	}
-//	
-//	/* Show Error message (if error happened) */
-//	if(msg != null && msg.trim().length() > 0) {
-//		Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
-//	}
-//}
-
-///* Checks which parameters are supported by the camera */
-//private void readSupportedCameraSettings(Camera tCamera) {
-//	
-//	Camera.Parameters p = tCamera.getParameters();
-//	
-//	/* Read Flash Mode */
-//	if (p.getSupportedFlashModes() != null && p.getSupportedFlashModes().size() > 1) {
-//		isFlashModeSupported = true;
-//	} 
-//	else {
-//		isFlashModeSupported = false;
-//	}
-//	
-//	/* Read Zoom */
-//	if (p.isZoomSupported()) {
-//		defaultZoom = p.getZoom(); 
-//		maxZoom = p.getMaxZoom();
-//		btnZoom.setEnabled(true);
-//		isZoomSupported = true;
-//	} 
-//	else {
-//		isZoomSupported = false;
-//		btnZoom.setEnabled(false);
-//	}
-//	
-//	/* Read exposure compensation */
-//	if (p.getMaxExposureCompensation() != 0) {
-//		defaultExposureCompensation = p.getExposureCompensation(); 																		
-//		maxExposureCompensation = p.getMaxExposureCompensation();
-//		minExposureCompensation = p.getMinExposureCompensation();
-//		isExposureCompensationSupported = true;
-//	} 
-//	else {
-//		isExposureCompensationSupported = false;
-//	}
-//	
-//	/* Read Scene Modes */
-//	if (p.getSupportedSceneModes() != null && p.getSupportedSceneModes().size() > 1) {
-//		mSupportedSceneModesList.clear();
-//		mSupportedSceneModesList.addAll(p.getSupportedSceneModes());
-//		defaultSceneMode = p.getSceneMode();
-//		isSceneModeSupported = true;
-//	} 
-//	else {
-//		isSceneModeSupported = false;
-//		defaultSceneMode = null;
-//	}
-//	
-//	/* Read White Balances */																
-//	if (p.getSupportedWhiteBalance() != null && p.getSupportedWhiteBalance().size() > 1) {
-//		mSupportedWhiteBalanceList.clear();
-//		mSupportedWhiteBalanceList.addAll(p.getSupportedWhiteBalance());
-//		defaultWhiteBalance = p.getWhiteBalance();
-//		isWhiteBalanceSupported = true;
-//	} 
-//	else {
-//		isWhiteBalanceSupported = false;
-//		defaultWhiteBalance = null;
-//	}
-//	
-//	/* Read Color Effects */
-//	if (p.getSupportedColorEffects() != null && p.getSupportedColorEffects().size() > 1) {
-//		mSupportedColorEffectsList.clear();
-//		mSupportedColorEffectsList.addAll(p.getSupportedColorEffects());
-//		defaultColorEffect = p.getColorEffect();
-//		isColorEffectSupported = true;
-//	} 
-//	else {
-//		isColorEffectSupported = false;
-//		defaultColorEffect = null;
-//	}
-//	
-//	/* Read Picture Sizes */
-//	if (p.getSupportedPictureSizes() != null && p.getSupportedPictureSizes().size() > 1) {
-//		mSupportedPictureSizesList.clear();
-//		mSupportedPictureSizesList.addAll(p.getSupportedPictureSizes());
-//		mPictureSizes.clear();
-//		if (mSupportedPictureSizesList != null) {
-//			Size tPictureSize;
-//			for (int i = 0; i < mSupportedPictureSizesList.size(); i++) {
-//				tPictureSize = mSupportedPictureSizesList.get(i);
-//				mPictureSizes.add(String.valueOf(tPictureSize.width) + " x " + String.valueOf(tPictureSize.height));
-//			}
-//			defaultPictureSize = p.getPictureSize();
-//			isPictureSizeSupported = true;
-//		} 
-//		else {
-//			defaultPictureSize = null;
-//			isPictureSizeSupported = false;
-//		}
-//	}
-//	
-//	/* Read Video Sizes */
-//	if (p.getSupportedVideoSizes() != null && p.getSupportedVideoSizes().size() > 1) {
-//		mSupportedVideoSizesList.clear();
-//		mSupportedVideoSizesList.addAll(p.getSupportedVideoSizes());
-//		mVideoSizes.clear();
-//		if (mSupportedVideoSizesList != null) {
-//			Size tVideoSize;
-//			for (int i = 0; i < mSupportedVideoSizesList.size(); i++) {
-//				tVideoSize = mSupportedVideoSizesList.get(i);
-//				mVideoSizes.add(String.valueOf(tVideoSize.width) + " x " + String.valueOf(tVideoSize.height));
-//			}
-//			defaultVideoSize = mSupportedVideoSizesList.get(0);
-//			selectedVideoSize = defaultVideoSize;
-//			isVideoSizeSupported = true;
-//		} 
-//		else {
-//			defaultVideoSize = null;
-//			isVideoSizeSupported = false;
-//		}
-//	}
-//}
