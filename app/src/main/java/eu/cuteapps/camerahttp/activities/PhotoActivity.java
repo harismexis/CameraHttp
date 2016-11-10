@@ -59,6 +59,7 @@ import android.preference.PreferenceManager;
 import android.provider.MediaStore.Video.Thumbnails;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.text.InputType;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -248,13 +249,13 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         removeSettingsViews();
       }
     });
-		
+
     cameraProgressDialog = MyProgressDialogs.getCircleProgressDialog(this,
-        "Capturing photo...");
+        getString(R.string.capturing_photo));
     cameraProgressDialog.setCancelable(false);
 		
     sendCaptureViaHttpProgressDialog = MyProgressDialogs.getCircleProgressDialog(this,
-        "Sending Capture via http...");
+        getString(R.string.sending_capture_via_http));
     sendCaptureViaHttpProgressDialog.setOnCancelListener(new OnCancelListener() {
       @Override
       public void onCancel(DialogInterface dialog) {
@@ -272,8 +273,8 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     allCaptures = datasource.getAllModels();
     capturesAdapter = new CapturesAdapter(this, allCaptures);
     mListViewCaptures.setAdapter(capturesAdapter);
-    mListViewCaptures.setBackgroundColor(Color.parseColor("#91A9B9"));
-    mListViewCaptures.setCacheColorHint(Color.parseColor("#91A9B9"));
+    mListViewCaptures.setBackgroundColor(ContextCompat.getColor(this, R.color.light_blue));
+    mListViewCaptures.setCacheColorHint(ContextCompat.getColor(this, R.color.light_blue));
     mListViewCaptures.setId(R.id.captures_list_view);
     registerForContextMenu(mListViewCaptures);
 
@@ -286,8 +287,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       @Override
       public void onClick(View v) {
         if(isPreviewBusy()) {
-          Toast.makeText(PhotoActivity.this, R.string.camera_is_busy,
-              Toast.LENGTH_SHORT).show();
+          Toast.makeText(PhotoActivity.this, R.string.camera_is_busy, Toast.LENGTH_SHORT).show();
           return;
         }
         try {
@@ -355,7 +355,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
             mCamera.setParameters(params);
             mCamera.startPreview();
           }
-
         } catch(Exception e) {
           Toast.makeText(PhotoActivity.this, R.string.error_switching_photo_video,
               Toast.LENGTH_SHORT).show();
@@ -380,9 +379,8 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
           Toast.makeText(PhotoActivity.this, R.string.camera_is_busy, Toast.LENGTH_SHORT).show();
         } else {
           removeSettingsViews();
-          CamcorderProfile camcorderProfile = null;
+          CamcorderProfile camcorderProfile;
           try {
-
             if(isFacingBackCamera && videoCameraFlashMode == Constants.VIDEO_CAMERA_FLASH_MODE_ON) {
               mCamera.stopPreview();
               Parameters params = mCamera.getParameters();
@@ -419,11 +417,11 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
                 Constants.MEDIA_FOLDER_NAME);
             mMediaRecorder.setOutputFile(lastCapturedMediaFile.toString());
 	        	 	    
-	        	 	    /* Add video to gallery */
+            /* Add video to gallery */
             sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
                 Uri.fromFile(lastCapturedMediaFile)));
 	        	 	    
-	        	 	    /* Start Video Recording */
+            /* Start Video Recording */
             mMediaRecorder.setPreviewDisplay(mPreview.getHolder().getSurface());
             mMediaRecorder.prepare();
             mMediaRecorder.start();
@@ -433,10 +431,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
                 Toast.LENGTH_SHORT).show();
             return;
           }
-
-//	            	Toast.makeText(PhotoActivity.this, 
-//        	 	    		String.valueOf(camcorderProfile.videoFrameWidth) + " x " + String.valueOf(camcorderProfile.videoFrameHeight), 
-//        	 	    		Toast.LENGTH_SHORT).show();
 
           videoButton.setImageResource(R.mipmap.stop);
           isVideoRecording = true;
@@ -450,8 +444,8 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
 		/* Thumbnail icon */
     mImageView = (ImageView) findViewById(R.id.activity_photo_camera_thumbnail);
     mImageView.setScaleType(ScaleType.FIT_XY);
-    thumbNailTargetWidth = (int) this.getResources().getDimension(R.dimen.thumbnail_imageview_width);
-    thumbNailTargetHeight = (int) this.getResources().getDimension(R.dimen.thumbnail_imageview_height);
+    thumbNailTargetWidth = (int) getResources().getDimension(R.dimen.thumbnail_imageview_width);
+    thumbNailTargetHeight = (int) getResources().getDimension(R.dimen.thumbnail_imageview_height);
     mImageView.setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(View v) {
@@ -483,11 +477,9 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
           return;
         }
         startActivity(intent);
-        return;
       }
     });
 		
-		/* Create Views with camera settings */
     createCameraSettingsViews();
 		
 		/* Check if hardware supports front camera */
@@ -512,21 +504,19 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     }
 		
 		/* Get last used camera to read its parameters */
-    if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("back_camera", true)) {
+    if(PreferenceManager.getDefaultSharedPreferences(this)
+        .getBoolean(Prefs.PREF_BACK_CAMERA, true)) {
       c = getCameraInstance(Camera.CameraInfo.CAMERA_FACING_BACK);
     } else {
       c = getCameraInstance(Camera.CameraInfo.CAMERA_FACING_FRONT);
     }
-		
-		/* Read parameters of last used camera (front / back) */
+
     readCameraSettingsAndSetUpSettingsViews(c);
-		
-		/* Release Camera */
     c.release();
 		
 		/* Check if camera was in video camera mode so as to update buttons */
     isVideoCameraMode = PreferenceManager.getDefaultSharedPreferences(this)
-        .getBoolean("video_camera_mode", false);
+        .getBoolean(Prefs.PREF_VIDEO_CAMERA_MODE, false);
     if(isVideoCameraMode) {
       switchPhotoVideoBtn.setImageResource(R.mipmap.switch_photo_cam);
       buttonTakePicture.setVisibility(View.GONE);
@@ -1095,13 +1085,13 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     } else {
 			/* Restore Zoom */
       if(isZoomSupported) {
-        final int lastZoom = prefs.getInt("zoom", defaultZoom);
+        final int lastZoom = prefs.getInt(Prefs.PREF_ZOOM, defaultZoom);
         p.setZoom(lastZoom);
         zoomBar.setProgress(lastZoom);
       }
 			/* Restore Brightness */
       if(isExposureCompensationSupported) {
-        final int lastExposureCompensation = prefs.getInt("exposure_compensation",
+        final int lastExposureCompensation = prefs.getInt(Prefs.PREF_EXPOSURE_COMPENSATION,
             defaultExposureCompensation);
         p.setExposureCompensation(lastExposureCompensation);
         final int lastBrightnessProgressValue = lastExposureCompensation +
@@ -1110,26 +1100,29 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       }
 			/* Restore Scene Mode */
       if(isSceneModeSupported) {
-        final String lastSceneMode = prefs.getString("scene_mode", defaultSceneMode);
+        final String lastSceneMode = prefs.getString(Prefs.PREF_SCENE_MODE,
+            defaultSceneMode);
         p.setSceneMode(lastSceneMode);
         mListViewSceneModes.setItemChecked(mSupportedSceneModesList.indexOf(lastSceneMode), true);
       }
 			/* Restore White Balance */
       if(isWhiteBalanceSupported) {
-        final String lastWhiteBalance = prefs.getString("white_balance", defaultWhiteBalance);
+        final String lastWhiteBalance = prefs.getString(Prefs.PREF_WHITE_BALANCE,
+            defaultWhiteBalance);
         p.setWhiteBalance(lastWhiteBalance);
         mListViewWhiteBalance.setItemChecked(mSupportedWhiteBalanceList.indexOf(lastWhiteBalance), true);
       }
 			/* Restore Color Effect */
       if(isColorEffectSupported) {
-        final String lastColorEffect = prefs.getString("color_effect", defaultColorEffect);
+        final String lastColorEffect = prefs.getString(Prefs.PREF_COLOR_EFFECT,
+            defaultColorEffect);
         p.setColorEffect(lastColorEffect);
         mListViewColorEffects.setItemChecked(mSupportedColorEffectsList.indexOf(lastColorEffect), true);
       }
     }
 		
 		/* Restore camera mode (photo / video) */
-    isVideoCameraMode = prefs.getBoolean("video_camera_mode", false);
+    isVideoCameraMode = prefs.getBoolean(Prefs.PREF_VIDEO_CAMERA_MODE, false);
     mCamera.setParameters(p);
 		
 		/* Restore Picture And Video Size */
@@ -1225,45 +1218,40 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
 		
 		/* Save Zoom */
     if(isZoomSupported) {
-      editor.putInt("zoom", p.getZoom());
+      editor.putInt(Prefs.PREF_ZOOM, p.getZoom());
     }
 		/* Save Exposure Compensation */
     if(isExposureCompensationSupported) {
-      editor.putInt("exposure_compensation", p.getExposureCompensation());
+      editor.putInt(Prefs.PREF_EXPOSURE_COMPENSATION, p.getExposureCompensation());
     }
 		/* Save Scene Mode */
     if(isSceneModeSupported) {
-      editor.putString("scene_mode", p.getSceneMode());
+      editor.putString(Prefs.PREF_SCENE_MODE, p.getSceneMode());
     }
 		/* Save White Balance */
     if(isWhiteBalanceSupported) {
-      editor.putString("white_balance", p.getWhiteBalance());
+      editor.putString(Prefs.PREF_WHITE_BALANCE, p.getWhiteBalance());
     }
 		/* Save Color Effect */
     if(isColorEffectSupported) {
-      editor.putString("color_effect", p.getColorEffect());
+      editor.putString(Prefs.PREF_COLOR_EFFECT, p.getColorEffect());
     }
 		
 		/* Save last captured media file */
     if(lastCapturedMediaFile != null) {
-      editor.putString("last_captured_file_path", lastCapturedMediaFile.getAbsolutePath());
+      editor.putString(Prefs.PREF_LAST_CAPTURED_FILE_PATH, lastCapturedMediaFile.getAbsolutePath());
     } else {
-      editor.putString("last_captured_file_path", null);
+      editor.putString(Prefs.PREF_LAST_CAPTURED_FILE_PATH, null);
     }
-    editor.putBoolean("video_camera_mode", isVideoCameraMode);
-    editor.putBoolean("back_camera", isFacingBackCamera);
+    editor.putBoolean(Prefs.PREF_VIDEO_CAMERA_MODE, isVideoCameraMode);
+    editor.putBoolean(Prefs.PREF_BACK_CAMERA, isFacingBackCamera);
     editor.commit();
-		
-		/* Save Picture and Video Size */
+
     savePictureAndVideoSize();
-		
-		/* Save Flash Mode */
     saveFlashMode();
   }
 
-  /* Save Picture / Video Size of current camera */
   private void savePictureAndVideoSize() {
-
     final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
     SharedPreferences.Editor editor = settings.edit();
 		
@@ -1288,11 +1276,9 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         editor.putInt(Prefs.PREF_FRONT_CAMERA_VIDEO_SIZE_HEIGHT, selectedVideoSize.height);
       }
     }
-
     editor.commit();
   }
 
-  /* Sets Camera Settings and Views to default */
   private void resetCameraSettingsAndSettingsViews() {
     mCamera.stopPreview();
     Parameters parameters = mCamera.getParameters();
@@ -1343,9 +1329,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     mCamera.startPreview();
   }
 
-  /* Sets camera settings views to default */
   private void resetCameraSettingsViews() {
-		
 		/* Set Zoom to default */
     if(isZoomSupported) {
       zoomBar.setProgress(defaultZoom);
@@ -1387,20 +1371,21 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
 		/* Interval for periodic capture */
     try {
       periodicCaptureInterval = 1000 * Integer
-          .parseInt(settings.getString("periodic_capture_interval", "2"));
+          .parseInt(settings.getString(Prefs.PREF_PERIODIC_CAPTURE_INTERVAL, "2"));
     } catch(Exception e) {
       periodicCaptureInterval = 2000;
     }
 		
 		/* Time delay after capture */
     try {
-      delayAfterCapture = 1000 * Integer.parseInt(settings.getString("delay_after_capture", "1"));
+      delayAfterCapture = 1000 * Integer.parseInt(settings
+          .getString(Prefs.PREF_DELAY_AFTER_CAPTURE, "1"));
     } catch(Exception e) {
       delayAfterCapture = 1000;
     }
 		
 		/* Shutter sound enabled / disabled */
-    final String shutter = settings.getString("shutter_sound", "enabled");
+    final String shutter = settings.getString(Prefs.PREF_SHUTTER_SOUND, "enabled");
     isShutterSoundEnabled = shutter.equals("enabled");
   }
 	
@@ -1508,7 +1493,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
 
   private void initCameraAndPreview() {
     final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-    isFacingBackCamera = prefs.getBoolean("back_camera", true);
+    isFacingBackCamera = prefs.getBoolean(Prefs.PREF_BACK_CAMERA, true);
     if(isFacingBackCamera) {
       mCamera = getCameraInstance(Camera.CameraInfo.CAMERA_FACING_BACK);
     } else {
@@ -1584,7 +1569,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       mCamera.startPreview();
     } catch(Exception e) {
       Toast.makeText(this, R.string.error_reversing_camera, Toast.LENGTH_LONG).show();
-      return;
     }
   }
 
@@ -1633,7 +1617,8 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
 			/* Store Location to database */
       final SharedPreferences settings = PreferenceManager
           .getDefaultSharedPreferences(PhotoActivity.this);
-      if(settings.getString("store_captures_to_db", "yes").equals("yes")) {
+      if(settings.getString(Prefs.PREF_STORE_CAPTURES_TO_DB, "yes")
+          .equals("yes")) {
 				
         boolean captureSavedSuccessfully = datasource.addCaptureToDatabase(
             LocationUtils.getStringLatitude(mLastLocation),
@@ -1738,7 +1723,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
 		/* Get the saved path of last capture photo */
     if(lastCapturedMediaFile == null) {
       final String path = PreferenceManager.getDefaultSharedPreferences(PhotoActivity.this)
-          .getString("last_captured_file_path", null);
+          .getString(Prefs.PREF_LAST_CAPTURED_FILE_PATH, null);
 
       if(path != null) {
         lastCapturedMediaFile = new File(path);
@@ -1747,7 +1732,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
 		
 		/* If last captured photo does not exist, get the last picture from storage folder */
     if(lastCapturedMediaFile == null || !lastCapturedMediaFile.exists()) {
-
       try {
         final File folder = new File(Environment
             .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
@@ -1856,7 +1840,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         LinearLayout.LayoutParams.MATCH_PARENT);
     input.setLayoutParams(lp);
     alertDialog.setView(input);
-    alertDialog.setPositiveButton("Start",
+    alertDialog.setPositiveButton(getString(R.string.start),
         new DialogInterface.OnClickListener() {
           public void onClick(DialogInterface dialog, int which) {
             try {
@@ -1876,16 +1860,16 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
             startPeriodicCapture(false);
           }
         });
-    alertDialog.setNeutralButton("Infinite",
-        new DialogInterface.OnClickListener() {
+    alertDialog.setNeutralButton(getString(R.string.infinite), new DialogInterface.OnClickListener() {
           @Override
           public void onClick(DialogInterface dialog, int which) {
             startPeriodicCapture(true);
           }
         });
-    alertDialog.setNegativeButton("Cancel",
+    alertDialog.setNegativeButton(getString(R.string.cancel),
         new DialogInterface.OnClickListener() {
           public void onClick(DialogInterface dialog, int which) {
+
           }
         });
     alertDialog.show();
@@ -1896,7 +1880,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     protected Boolean doInBackground(String... params) {
 			/* Update capture in database, and get captures from database */
       final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(PhotoActivity.this);
-      if(settings.getString("store_captures_to_db", "yes").equals("yes")) {
+      if(settings.getString(Prefs.PREF_STORE_CAPTURES_TO_DB, "yes").equals("yes")) {
 				
 				/* Add new capture to database */
         boolean captureSavedSuccessfully = datasource.addCaptureToDatabase(
@@ -1949,7 +1933,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       mMediaRecorder.reset();
       mMediaRecorder.release();
       mMediaRecorder = null;
-      mCamera.lock(); /* lock camera for later use (take camera access back from MediaRecorder) */
+      mCamera.lock();
     }
   }
 
@@ -2193,8 +2177,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
 
     return super.onPrepareOptionsMenu(menu);
   }
-	
-	/* Context Menu */
 
   @Override
   public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
@@ -2242,8 +2224,8 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
 			
       case R.id.context_places_delete:
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
-        alertDialog.setMessage("Delete selected Place ?");
-        alertDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+        alertDialog.setMessage(getString(R.string.delete_selected_place));
+        alertDialog.setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
           public void onClick(DialogInterface dialog, int which) {
             try {
               final int indexOfSelectedLinkToDelete = allCaptures.indexOf(selectedPlace);
@@ -2253,13 +2235,15 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
               if(allCaptures.size() <= 0) {
                 frameLayout.removeView(mListViewCaptures);
               }
-              Toast.makeText(PhotoActivity.this, "Place deleted successfully", Toast.LENGTH_SHORT).show();
+              Toast.makeText(PhotoActivity.this, getString(R.string.place_deleted),
+                  Toast.LENGTH_SHORT).show();
             } catch(Exception e) {
-              Toast.makeText(PhotoActivity.this, "Error deleting Place !", Toast.LENGTH_SHORT).show();
+              Toast.makeText(PhotoActivity.this, getString(R.string.error_deleting_place),
+                  Toast.LENGTH_SHORT).show();
             }
           }
         });
-        alertDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
+        alertDialog.setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
           public void onClick(DialogInterface dialog, int which) {
 
           }
@@ -2270,21 +2254,24 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
 			/* Delete all places */
       case R.id.context_places_delete_all:
         AlertDialog.Builder alertDialogDeleteAll = new AlertDialog.Builder(this);
-        alertDialogDeleteAll.setMessage("Delete all Places ?");
-        alertDialogDeleteAll.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+        alertDialogDeleteAll.setMessage(getString(R.string.delete_all_places));
+        alertDialogDeleteAll.setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
           public void onClick(DialogInterface dialog, int which) {
             try {
               allCaptures.clear();
               datasource.deleteAllCaptures();
               capturesAdapter.notifyDataSetChanged();
               frameLayout.removeView(mListViewCaptures);
-              Toast.makeText(PhotoActivity.this, "All places deleted successfully", Toast.LENGTH_SHORT).show();
+              Toast.makeText(PhotoActivity.this, getString(R.string.all_places_deleted),
+                  Toast.LENGTH_SHORT).show();
             } catch(Exception e) {
-              Toast.makeText(PhotoActivity.this, "Error deleting places !", Toast.LENGTH_SHORT).show();
+              Toast.makeText(PhotoActivity.this, getString(R.string.error_deleting_places),
+                  Toast.LENGTH_SHORT).show();
             }
           }
         });
-        alertDialogDeleteAll.setNegativeButton("No", new DialogInterface.OnClickListener() {
+        alertDialogDeleteAll.setNegativeButton(getString(R.string.no),
+            new DialogInterface.OnClickListener() {
           public void onClick(DialogInterface dialog, int which) {
 
           }
@@ -2296,10 +2283,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         return super.onContextItemSelected(item);
     }
   }
-	
-	/* End : Context Menu */
-	
-	/* Options Menu */
 
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
