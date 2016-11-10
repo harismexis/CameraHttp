@@ -20,13 +20,6 @@ public class Capture {
     this.mediaFilePath = mediaFilePath;
   }
 
-  public Capture(String latitude, String longitude, String mediaType, String mediaFilePath) {
-    this.latitude = latitude;
-    this.longitude = longitude;
-    this.mediaType = mediaType;
-    this.mediaFilePath = mediaFilePath;
-  }
-
   public String getAllCaptureInfoToString() {
     return "No " + id + ":\n" + "Latitude = " + latitude + "\n" + "Longitude = " + longitude;
   }
@@ -51,20 +44,3 @@ public class Capture {
     return mediaFilePath;
   }
 }
-
-//public String getMediaFilePathToString() {
-//if(this.mediaFilePath == null) {
-//	return "no file path";
-//}
-//else {
-//	return this.mediaFilePath;
-//}
-//}
-
-//public String getCaptureInfoToStringNoId() {
-//return  
-//		"Latitude = " + latitude + "\n" +
-//		"Longitude = " + longitude + "\n" +
-//		"Media type = " + mediaType + "\n" +
-//		"Media path = " + this.getMediaFilePathToString();
-//}
