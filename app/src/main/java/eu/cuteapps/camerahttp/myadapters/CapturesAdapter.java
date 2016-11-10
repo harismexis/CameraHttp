@@ -72,17 +72,17 @@ public class CapturesAdapter extends ArrayAdapter<Capture> {
 
         if(mediaType.equals(Capture.TYPE_IMAGE)) {
 
-	    			/* Get the dimensions of the bitmap */
+          /* Get the dimensions of the bitmap */
           BitmapFactory.Options bmOptions = new BitmapFactory.Options();
           bmOptions.inJustDecodeBounds = true;
           BitmapFactory.decodeFile(mediaFilePath, bmOptions);
           final int photoW = bmOptions.outWidth;
           final int photoH = bmOptions.outHeight;
 	    			
-	    			/* Determine how much to scale down the image */
+          /* Determine how much to scale down the image */
           final int scaleFactor = Math.min(photoW / thumbNailTargetWidth, photoH / thumbNailTargetHeight);
 	    			
-	    			/* Decode the image file into a Bitmap sized to fill the View */
+          /* Decode the image file into a Bitmap sized to fill the View */
           bmOptions.inJustDecodeBounds = false;
           bmOptions.inSampleSize = scaleFactor;
           bmOptions.inPurgeable = true;

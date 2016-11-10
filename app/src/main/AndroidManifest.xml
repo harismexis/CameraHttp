@@ -37,7 +37,7 @@
         android:theme="@style/AppTheme">
 
         <activity
-            android:name=".PhotoActivity"
+            android:name=".activities.PhotoActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/my_app_name"
             android:screenOrientation="landscape">
@@ -47,20 +47,10 @@
             </intent-filter>
         </activity>
 
-        <!--<activity-->
-            <!--android:name=".MainActivity"-->
-            <!--android:configChanges="orientation|keyboardHidden|screenSize"-->
-            <!--android:label="@string/my_app_name">-->
-        <!--</activity>-->
-
         <activity
-            android:name=".PrefsActivity"
+            android:name=".activities.PrefsActivity"
             android:label="@string/my_app_name">
         </activity>
-
-        <!--<meta-data-->
-            <!--android:name="com.google.android.gms.version"-->
-            <!--android:value="@integer/google_play_services_version"/>-->
 
     </application>
 

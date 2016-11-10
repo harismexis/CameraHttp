@@ -12,6 +12,8 @@ public class Prefs {
   public static final String PREF_FRONT_CAMERA_VIDEO_SIZE_HEIGHT = "front_camera_video_size_height";
   public static final String PREF_PHOTO_CAMERA_FLASH_MODE = "photo_camera_flash_mode";
   public static final String PREF_VIDEO_CAMERA_FLASH_MODE = "video_camera_flash_mode";
+  public static final String PREF_BACK_CAMERA = "back_camera";
+  public static final String PREF_VIDEO_CAMERA_MODE = "video_camera_mode";
   public static final String PREF_IS_FACING_BACK_CAMERA = "is_facing_back_camera";
   public static final String PREF_IS_VIDEO_CAMERA_MODE = "is_video_camera_mode";
   public static final String PREF_STORE_CAPTURES_TO_DB = "store_captures_to_db";

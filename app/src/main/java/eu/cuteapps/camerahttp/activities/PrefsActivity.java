@@ -1,8 +1,9 @@
-package eu.cuteapps.camerahttp;
+package eu.cuteapps.camerahttp.activities;
 
-import eu.cuteapps.camerahttp.R;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
+
+import eu.cuteapps.camerahttp.R;
 
 public class PrefsActivity extends PreferenceActivity {
 
