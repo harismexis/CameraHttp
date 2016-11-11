@@ -1,4 +1,4 @@
-package eu.cuteapps.camerahttp;
+package eu.cuteapps.camerahttp.mycamerapreview;
 
 import java.io.IOException;
 import java.util.List;
