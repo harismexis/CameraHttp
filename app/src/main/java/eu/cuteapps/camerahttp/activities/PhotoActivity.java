@@ -87,7 +87,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import eu.cuteapps.camerahttp.CameraPreview;
+import eu.cuteapps.camerahttp.mycamerapreview.CameraPreview;
 import eu.cuteapps.camerahttp.R;
 import eu.cuteapps.camerahttp.constants.Actions;
 import eu.cuteapps.camerahttp.constants.Constants;
