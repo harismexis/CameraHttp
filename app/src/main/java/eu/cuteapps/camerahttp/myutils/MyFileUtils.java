@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
 
@@ -17,6 +18,7 @@ public class MyFileUtils {
   public static final int MEDIA_TYPE_VIDEO = 2;
   public static final int MEDIA_TYPE_AUDIO = 3;
 
+  // Creates a File for saving image / video / audio
   public static File getOutputMediaFile(int type, String folderName) {
     File mediaStorageDir = new File(
         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), folderName);
@@ -26,7 +28,6 @@ public class MyFileUtils {
         return null;
       }
     }
-
     String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
     File mediaFile;
     if(type == MEDIA_TYPE_IMAGE) {
@@ -60,23 +61,5 @@ public class MyFileUtils {
       return true;
     }
     return false;
-  }
-
-  public static String convertStreamToString(InputStream is) throws Exception {
-    BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-    StringBuilder sb = new StringBuilder();
-    String line;
-    while((line = reader.readLine()) != null) {
-      sb.append(line).append("\n");
-    }
-    return sb.toString();
-  }
-
-  public static String getStringFromFile(String filePath) throws Exception {
-    File fl = new File(filePath);
-    FileInputStream fin = new FileInputStream(fl);
-    String ret = convertStreamToString(fin);
-    fin.close();
-    return ret;
   }
 }
