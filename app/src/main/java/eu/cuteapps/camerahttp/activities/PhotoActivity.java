@@ -1160,8 +1160,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
     if(isVideoSizeSupported) {
       int lastVideoSizeWidth = -1;
       int lastVideoSizeHeight = -1;
-			
-			/* Get last Video Size width and height */
+
       if(isFacingBackCamera) {
         lastVideoSizeWidth = prefs.getInt(Prefs.PREF_BACK_CAMERA_VIDEO_SIZE_WIDTH,
             defaultVideoSize.width);
