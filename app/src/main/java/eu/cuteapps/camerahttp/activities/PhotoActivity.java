@@ -635,54 +635,57 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       public void onItemClick(AdapterView<?> parent, View item, int position, long id) {
         String selectedSceneMode = mSupportedSceneModesList.get(position);
         try {
-          String userMessage = Constants.EMPTY_STRING;
           mCamera.stopPreview();
           Parameters p = mCamera.getParameters();
-					
-					/* 1. Set color effect and white balance to default */
-          String previousWhiteBalance = Constants.EMPTY_STRING;
+
+          String previousWhiteBalance = null;
           if(isWhiteBalanceSupported) {
             previousWhiteBalance = p.getWhiteBalance();
-            // p.setWhiteBalance(defaultWhiteBalance);
-            // mListViewWhiteBalance.setItemChecked(mSupportedWhiteBalanceList.
-            // indexOf(defaultWhiteBalance), true);
           }
 
-          String previousColorEffect = Constants.EMPTY_STRING;
+          String previousColorEffect = null;
           if(isColorEffectSupported) {
             previousColorEffect = p.getColorEffect();
-            p.setColorEffect(defaultColorEffect);
-            if(!previousColorEffect.equals(defaultColorEffect)) {
-              mListViewColorEffects.setItemChecked(mSupportedColorEffectsList
-                  .indexOf(defaultColorEffect), true);
-              userMessage += "Color Effect changed from " + previousColorEffect +
-                  " to " + defaultColorEffect + "\n\n";
-            }
           }
 
           mCamera.setParameters(p);
-					
-					/* 2. Set scene mode */
-          Parameters params = mCamera.getParameters();
-          params.setSceneMode(selectedSceneMode);
 
-          mCamera.setParameters(params);
+          Parameters parameters = mCamera.getParameters();
+          parameters.setSceneMode(selectedSceneMode);
+          mCamera.setParameters(parameters);
           mCamera.startPreview();
 					
-					/* 3. Update listViews ( check if white balance changed to update list view ) */
-          if(isWhiteBalanceSupported) {
+					/* Check if white balance changed and if so, update list view */
+          String whiteBalanceMessage = Constants.EMPTY_STRING;
+          if(previousWhiteBalance != null) {
             final String newWhiteBalance = mCamera.getParameters().getWhiteBalance();
             if(!previousWhiteBalance.equals(newWhiteBalance)) {
-              mListViewWhiteBalance.setItemChecked(mSupportedWhiteBalanceList.indexOf(newWhiteBalance),
+              mListViewWhiteBalance.setItemChecked(
+                  mSupportedWhiteBalanceList.indexOf(newWhiteBalance),
                   true);
-              userMessage += "White Balance changed from " + previousWhiteBalance +
+              whiteBalanceMessage += "White Balance changed from " + previousWhiteBalance +
                   " to " + newWhiteBalance;
             }
           }
+
+          /* Check if color effect changed and if so, update list view */
+          String colorEffectMessage = Constants.EMPTY_STRING;
+          if(previousColorEffect != null) {
+            final String newColorEffect = mCamera.getParameters().getColorEffect();
+            if(!previousColorEffect.equals(newColorEffect)) {
+              mListViewColorEffects.setItemChecked(
+                  mSupportedColorEffectsList.indexOf(newColorEffect),
+                  true);
+              colorEffectMessage += "Color Effect changed from " + previousColorEffect +
+                  " to " + newColorEffect;
+            }
+          }
 					
-					/* 4. Notify user for affected parameters */
+					/* Notify user for affected parameters */
+          final String userMessage = (whiteBalanceMessage + Constants.TWO_NEW_LINES +
+              colorEffectMessage).trim();
           if(!userMessage.equals(Constants.EMPTY_STRING)) {
-            Toast.makeText(PhotoActivity.this, userMessage.trim(), Toast.LENGTH_LONG).show();
+            Toast.makeText(PhotoActivity.this, userMessage, Toast.LENGTH_LONG).show();
           }
         } catch(Exception e) {
           Toast.makeText(PhotoActivity.this, R.string.error_setting_scene_mode,
@@ -707,46 +710,49 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       public void onItemClick(AdapterView<?> parent, View item, int position, long id) {
         String selectedWhiteBalance = mSupportedWhiteBalanceList.get(position);
         try {
-          String userMessage = Constants.EMPTY_STRING;
           mCamera.stopPreview();
           Parameters p = mCamera.getParameters();
 
-          // 1. Set scene mode to default
+          /* Set scene mode to default */
+          String sceneModeMessage = Constants.EMPTY_STRING;
           if(isSceneModeSupported) {
             final String prevSceneMode = p.getSceneMode();
             if(!prevSceneMode.equals(defaultSceneMode)) {
               p.setSceneMode(defaultSceneMode);
               mListViewSceneModes.setItemChecked(mSupportedSceneModesList.indexOf(defaultSceneMode),
                   true);
-              userMessage = "Scene Mode changed from " + prevSceneMode +
-                  " to " + defaultSceneMode + "\n\n";
+              sceneModeMessage = "Scene Mode changed from " + prevSceneMode +
+                  " to " + defaultSceneMode;
             }
           }
 
-          // 2. Set color effect to default
+          /* Set color effect to default */
+          String colorEffectMessage = Constants.EMPTY_STRING;
           if(isColorEffectSupported) {
             String previousColorEffect = p.getColorEffect();
             if(!previousColorEffect.equals(defaultColorEffect)) {
               p.setColorEffect(defaultColorEffect);
               mListViewColorEffects.setItemChecked(mSupportedColorEffectsList.
                   indexOf(defaultColorEffect), true);
-              userMessage += "Color effect changed from " + previousColorEffect +
+              colorEffectMessage += "Color effect changed from " + previousColorEffect +
                   " to " + defaultColorEffect;
             }
           }
 
           mCamera.setParameters(p);
 
-          // 3. Now set selected white balance
+          /* Set selected white balance */
           Parameters params = mCamera.getParameters();
           params.setWhiteBalance(selectedWhiteBalance);
 
           mCamera.setParameters(params);
           mCamera.startPreview();
 
-          // 4. Alert user for affected parameters
+          /* Alert user for affected parameters */
+          final String userMessage = (sceneModeMessage + Constants.TWO_NEW_LINES +
+              colorEffectMessage).trim();
           if(!userMessage.equals(Constants.EMPTY_STRING)) {
-            Toast.makeText(PhotoActivity.this, userMessage.trim(), Toast.LENGTH_LONG).show();
+            Toast.makeText(PhotoActivity.this, userMessage, Toast.LENGTH_LONG).show();
           }
         } catch(Exception e) {
           Toast.makeText(PhotoActivity.this, R.string.error_setting_white_balance,
@@ -771,46 +777,48 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       public void onItemClick(AdapterView<?> parent, View item, int position, long id) {
         String selectedColorEffect = mSupportedColorEffectsList.get(position);
         try {
-          String userMessage = Constants.EMPTY_STRING;
           mCamera.stopPreview();
           Parameters p = mCamera.getParameters();
 
-          // 1. First set scene mode to default - better not to set it after setting color effect
+          /* Set scene mode to default */
+          String sceneModeMessage = Constants.EMPTY_STRING;
           if(isSceneModeSupported) {
             final String prevSceneMode = p.getSceneMode();
             if(!prevSceneMode.equals(defaultSceneMode)) {
               p.setSceneMode(defaultSceneMode);
               mListViewSceneModes.setItemChecked(mSupportedSceneModesList.
                   indexOf(defaultSceneMode), true);
-              userMessage += "Scene Mode changed from " + prevSceneMode +
-                  " to " + defaultSceneMode + "\n\n";
+              sceneModeMessage += "Scene Mode changed from " + prevSceneMode +
+                  " to " + defaultSceneMode;
             }
           }
 
-          // 2. Set white balance to default
+          /* Set white balance to default */
+          String whiteBalanceMessage = Constants.EMPTY_STRING;
           if(isWhiteBalanceSupported) {
             final String prevWhiteBalance = p.getWhiteBalance();
             if(!prevWhiteBalance.equals(defaultWhiteBalance)) {
               p.setWhiteBalance(defaultWhiteBalance);
               mListViewWhiteBalance.setItemChecked(mSupportedWhiteBalanceList.
                   indexOf(defaultWhiteBalance), true);
-              userMessage += "White Balance changed from " + prevWhiteBalance +
+              whiteBalanceMessage += "White Balance changed from " + prevWhiteBalance +
                   " to " + defaultWhiteBalance;
             }
           }
 
           mCamera.setParameters(p);
 
-          // 3. Now set selected color effect - ONLY this way worked!
+          /* Set selected color effect (ONLY this way worked!) */
           Parameters params = mCamera.getParameters();
           params.setColorEffect(selectedColorEffect);
-
           mCamera.setParameters(params);
           mCamera.startPreview();
 
-          // 4. Alert user for affected parameters
+          /* Alert user for affected parameters */
+          final String userMessage = (sceneModeMessage + Constants.TWO_NEW_LINES +
+            whiteBalanceMessage).trim();
           if(!userMessage.equals(Constants.EMPTY_STRING)) {
-            Toast.makeText(PhotoActivity.this, userMessage.trim(), Toast.LENGTH_LONG).show();
+            Toast.makeText(PhotoActivity.this, userMessage, Toast.LENGTH_LONG).show();
           }
         } catch(Exception e) {
           Toast.makeText(PhotoActivity.this, R.string.error_setting_color_effect,
