@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <item
+        android:id="@+id/camera_menu_all_captures"
+        android:title="@string/captures" />
+    
+    <item
+        android:id="@+id/camera_menu_picture_size"
+        android:title="@string/picture_size" />
+    
+     <item
+        android:id="@+id/camera_menu_white_balance"
+        android:title="@string/white_balance" />
+    
+    <item
+        android:id="@+id/camera_menu_color_effect"
+        android:title="@string/color_effect" />
+    
+    <item
+        android:id="@+id/camera_menu_scene_mode"
+        android:title="@string/scene_mode" />
+    
+    <item
+	    android:id="@+id/camera_menu_flash"
+	    android:title="@string/flash" >
+       <menu>
+	    <group
+	        android:id="@+id/camera_menu_flash_group"
+	        android:checkableBehavior="single">
+	        
+	        <item
+	            android:id="@+id/camera_menu_flash_auto"
+	            android:title="@string/flash_auto" />
+	        
+	        <item
+	            android:id="@+id/camera_menu_flash_on"
+	            android:title="@string/flash_on" />
+
+	        <item
+	            android:id="@+id/camera_menu_flash_off"
+	            android:title="@string/flash_off"
+	            android:checked="true" />
+	    </group>
+	    </menu>
+	</item>
+    
+    <item
+       android:id="@+id/camera_menu_exposure_comp"
+       android:title="@string/brightness" />
+    
+    <item
+        android:id="@+id/camera_menu_left_controls"
+        android:title="@string/show_left_controls" >
+    	<menu>
+	    <group
+	        android:id="@+id/camera_menu_left_controls_group"
+	        android:checkableBehavior="single">
+	        
+	        <item
+	            android:id="@+id/camera_menu_left_controls_show"
+	            android:title="@string/show"
+	            android:checked="true" />
+	        
+	        <item
+	            android:id="@+id/camera_menu_left_controls_hide"
+	            android:title="@string/hide" />
+	    </group>
+	    </menu>
+    </item>
+    
+    <item
+        android:id="@+id/camera_menu_reset_camera"
+        android:title="@string/reset_camera" />
+    
+    <item
+        android:id="@+id/camera_menu_app_settings"
+        android:title="@string/preferences" />
+    
+    <item
+        android:id="@+id/camera_menu_device_settings"
+        android:title="@string/settings" />
+    
+</menu>
