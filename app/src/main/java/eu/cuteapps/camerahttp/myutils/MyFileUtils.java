@@ -18,7 +18,6 @@ public class MyFileUtils {
   public static final int MEDIA_TYPE_VIDEO = 2;
   public static final int MEDIA_TYPE_AUDIO = 3;
 
-  // Creates a File for saving image / video / audio
   public static File getOutputMediaFile(int type, String folderName) {
     File mediaStorageDir = new File(
         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), folderName);
@@ -43,23 +42,11 @@ public class MyFileUtils {
   }
 
   public static boolean fileIsImage(String fileName) {
-    if(fileName == null) {
-      return false;
-    }
-    if(fileName.endsWith(".jpg") || fileName.endsWith(".JPG") ||
-        fileName.endsWith(".png") || fileName.endsWith(".PNG")) {
-      return true;
-    }
-    return false;
+    return fileName != null && (fileName.endsWith(".jpg") || fileName.endsWith(".JPG") ||
+        fileName.endsWith(".png") || fileName.endsWith(".PNG"));
   }
 
   public static boolean fileIsVideo(String fileName) {
-    if(fileName == null) {
-      return false;
-    }
-    if(fileName.endsWith(".mp4") || fileName.endsWith(".MP4")) {
-      return true;
-    }
-    return false;
+    return fileName != null && (fileName.endsWith(".mp4") || fileName.endsWith(".MP4"));
   }
 }
