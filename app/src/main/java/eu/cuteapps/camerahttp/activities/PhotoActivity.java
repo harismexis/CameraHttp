@@ -114,7 +114,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
   private ProgressDialog sendCaptureViaHttpProgressDialog;
   private HttpPost httpPost;
 
-  private float density;
   private AudioManager audioManager;
   private LinearLayout leftControlsLayout;
   private LinearLayout activityLayout;
@@ -192,8 +191,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
   private CameraPreview mPreview;
   private FrameLayout frameLayout;
   private boolean isCapturingPhoto = false;
-  private ImageView mImageView;
-  private CapturePhotoTask capturePhotoTask;
+  private ImageView mImageViewThumbnail;
   private ProgressDialog cameraProgressDialog;
   private int thumbNailTargetWidth;
   private int thumbNailTargetHeight;
@@ -237,7 +235,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     datasource = new MySQLiteCapturesDataSource(this);
     datasource.open();
 
-    density = getResources().getDisplayMetrics().density;
     alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
     audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
@@ -312,10 +309,8 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
             buttonTakePicture.setVisibility(View.GONE);
           }
 					
-					/* Change Camera Mode (Photo / Video) */
           isVideoCameraMode = !isVideoCameraMode;
 					
-					/* Init camera (BACK / FRONT) */
           if(isFacingBackCamera) {
             mCamera = getCameraInstance(Camera.CameraInfo.CAMERA_FACING_BACK);
           } else {
@@ -339,7 +334,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
             mCamera.setParameters(params);
             mCamera.startPreview();
 						
-						/* Update Picture Size ListView */
             final String selectedPictureSizeToString = String.valueOf(selectedPictureSize.width) +
                 " x " + String.valueOf(selectedPictureSize.height);
             mListViewPictureSizes.setItemChecked(mPictureSizes.indexOf(selectedPictureSizeToString),
@@ -394,17 +388,15 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
             mMediaRecorder = new MediaRecorder();
             mCamera.unlock();
             mMediaRecorder.setCamera(mCamera);
-	        	 	    
-            /* Back camera */
-            if(isFacingBackCamera) {
+
+            if(isFacingBackCamera) { /* Back camera */
               mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
               mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
               camcorderProfile = CamcorderProfile.get(Camera.CameraInfo.CAMERA_FACING_BACK,
                   CamcorderProfile.QUALITY_HIGH);
               mMediaRecorder.setProfile(camcorderProfile);
-            }
-            /* Front Camera */
-            else {
+
+            } else { /* Front Camera */
               mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
               mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
               camcorderProfile = CamcorderProfile.get(Camera.CameraInfo.CAMERA_FACING_FRONT,
@@ -423,7 +415,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
             sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
                 Uri.fromFile(lastCapturedMediaFile)));
 	        	 	    
-            /* Start Video Recording */
             mMediaRecorder.setPreviewDisplay(mPreview.getHolder().getSurface());
             mMediaRecorder.prepare();
             mMediaRecorder.start();
@@ -444,11 +435,11 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     });
 		
 		/* Thumbnail icon */
-    mImageView = (ImageView) findViewById(R.id.activity_photo_camera_thumbnail);
-    mImageView.setScaleType(ScaleType.FIT_XY);
+    mImageViewThumbnail = (ImageView) findViewById(R.id.activity_photo_camera_thumbnail);
+    mImageViewThumbnail.setScaleType(ScaleType.FIT_XY);
     thumbNailTargetWidth = (int) getResources().getDimension(R.dimen.thumbnail_imageview_width);
     thumbNailTargetHeight = (int) getResources().getDimension(R.dimen.thumbnail_imageview_height);
-    mImageView.setOnClickListener(new OnClickListener() {
+    mImageViewThumbnail.setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(View v) {
         if(lastCapturedMediaFile == null) {
@@ -456,6 +447,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
               Toast.LENGTH_SHORT).show();
           return;
         }
+
         if(isPreviewBusy()) {
           Toast.makeText(PhotoActivity.this, R.string.camera_is_busy, Toast.LENGTH_SHORT).show();
           return;
@@ -527,7 +519,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     }
   }
 
-  /* Saves Flash Mode */
   private void saveFlashMode() {
     if(!isFlashModeSupported) {
       return;
@@ -542,7 +533,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     editor.commit();
   }
 
-  /* Restores Flash Mode */
   private void restoreFlashMode() {
     final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
     videoCameraFlashMode = settings.getInt(Prefs.PREF_VIDEO_CAMERA_FLASH_MODE,
@@ -555,13 +545,11 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     }
   }
 
-  /* Creates the Views for camera settings */
   private void createCameraSettingsViews() {
-
     final LayoutInflater layoutInflater = (LayoutInflater) getSystemService(
         Context.LAYOUT_INFLATER_SERVICE);
 		
-		/* -- Zoom Bar -- */
+		/* Zoom Bar */
     mZoomBarLayout = (LinearLayout) layoutInflater.inflate(R.layout.zoom_layout, null, false);
     mZoomBarLayout.setOnClickListener(new OnClickListener() {
       @Override
@@ -596,7 +584,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       }
     });
 		
-		/* -- Brightness Bar -- */
+		/* Brightness Bar */
     mBrightnessBarLayout = (LinearLayout) layoutInflater.inflate(R.layout.brightness_bar_layout,
         null, false);
     mBrightnessBarLayout.setOnClickListener(new OnClickListener() {
@@ -632,7 +620,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       }
     });
 		
-		/* -- ListView for Scene Modes -- */
+		/* ListView for Scene Modes */
     mListViewSceneModes = new ListView(this);
     mSupportedSceneModesList = new ArrayList<>();
     final ArrayAdapter<String> sceneModesAdapter = new ArrayAdapter<>(this,
@@ -641,7 +629,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     mListViewSceneModes.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
     mListViewSceneModes.setBackgroundColor(Color.GRAY);
     mListViewSceneModes.setCacheColorHint(Color.GRAY);
-    mListViewSceneModes.setSelector(getResources().getDrawable(R.drawable.listselector));
+    mListViewSceneModes.setSelector(ContextCompat.getDrawable(this, R.drawable.listselector));
     mListViewSceneModes.setId(R.id.scene_modes_list_view);
     mListViewSceneModes.setOnItemClickListener(new OnItemClickListener() {
       @Override
@@ -704,7 +692,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       }
     });
 		
-		/* -- ListView White Balance -- */
+		/* ListView White Balance */
     mListViewWhiteBalance = new ListView(this);
     mSupportedWhiteBalanceList = new ArrayList<>();
     final ArrayAdapter<String> whiteBalanceAdapter = new ArrayAdapter<>(this,
@@ -713,7 +701,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     mListViewWhiteBalance.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
     mListViewWhiteBalance.setBackgroundColor(Color.GRAY);
     mListViewWhiteBalance.setCacheColorHint(Color.GRAY);
-    mListViewWhiteBalance.setSelector(getResources().getDrawable(R.drawable.listselector));
+    mListViewWhiteBalance.setSelector(ContextCompat.getDrawable(this, R.drawable.listselector));
     mListViewWhiteBalance.setId(R.id.white_balance_list_view);
     mListViewWhiteBalance.setOnItemClickListener(new OnItemClickListener() {
       @Override
@@ -768,7 +756,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       }
     });
 		
-		/* -- ListView Color Effects -- */
+		/* ListView Color Effects */
     mListViewColorEffects = new ListView(this);
     mSupportedColorEffectsList = new ArrayList<>();
     final ArrayAdapter<String> colorEffectsAdapter = new ArrayAdapter<>(this,
@@ -777,7 +765,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     mListViewColorEffects.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
     mListViewColorEffects.setBackgroundColor(Color.GRAY);
     mListViewColorEffects.setCacheColorHint(Color.GRAY);
-    mListViewColorEffects.setSelector(getResources().getDrawable(R.drawable.listselector));
+    mListViewColorEffects.setSelector(ContextCompat.getDrawable(this, R.drawable.listselector));
     mListViewColorEffects.setId(R.id.color_effects_list_view);
     mListViewColorEffects.setOnItemClickListener(new OnItemClickListener() {
       @Override
@@ -842,7 +830,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     mListViewPictureSizes.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
     mListViewPictureSizes.setBackgroundColor(Color.GRAY);
     mListViewPictureSizes.setCacheColorHint(Color.GRAY);
-    mListViewPictureSizes.setSelector(getResources().getDrawable(R.drawable.listselector));
+    mListViewPictureSizes.setSelector(ContextCompat.getDrawable(this, R.drawable.listselector));
     mListViewPictureSizes.setId(R.id.picture_sizes_list_view);
     mListViewPictureSizes.setOnItemClickListener(new OnItemClickListener() {
       @Override
@@ -881,7 +869,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     mListViewVideoSizes.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
     mListViewVideoSizes.setBackgroundColor(Color.GRAY);
     mListViewVideoSizes.setCacheColorHint(Color.GRAY);
-    mListViewVideoSizes.setSelector(getResources().getDrawable(R.drawable.listselector));
+    mListViewVideoSizes.setSelector(ContextCompat.getDrawable(this, R.drawable.listselector));
     mListViewVideoSizes.setId(R.id.video_sizes_list_view);
     mListViewVideoSizes.setOnItemClickListener(new OnItemClickListener() {
       @Override
@@ -1703,21 +1691,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
 
   private void capturePhoto() {
     removeSettingsViews();
-    capturePhotoTask = new CapturePhotoTask();
-    capturePhotoTask.execute();
-  }
-
-  private boolean cameraSupportsFlashMode(String mode) {
-    final List<String> flashModes = mCamera.getParameters().getSupportedFlashModes();
-    if(flashModes == null || flashModes.size() == 0) {
-      return false;
-    }
-    for(int i = 0; i < flashModes.size(); i++) {
-      if(flashModes.get(i).equals(mode)) {
-        return true;
-      }
-    }
-    return false;
+    new CapturePhotoTask().execute();
   }
 
   private void restoreLastCapturedMediaAndSetThumbnail() {
@@ -1759,12 +1733,12 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         setThumbnailPicFromAudio();
       }
     } else {
-      mImageView.setImageBitmap(null);
+      mImageViewThumbnail.setImageBitmap(null);
     }
   }
 
   private void setThumbnailPicFromAudio() {
-    mImageView.setImageDrawable(this.getResources().getDrawable(R.mipmap.mic_dark));
+    mImageViewThumbnail.setImageDrawable(ContextCompat.getDrawable(this, R.mipmap.mic_dark));
   }
 
   private void setThumbnailPicFromVideo() {
@@ -1772,7 +1746,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       final Bitmap bmThumbnail = ThumbnailUtils
           .createVideoThumbnail(lastCapturedMediaFile.getAbsolutePath(),
               Thumbnails.MICRO_KIND);
-      mImageView.setImageBitmap(bmThumbnail);
+      mImageViewThumbnail.setImageBitmap(bmThumbnail);
     }
   }
 
@@ -1794,7 +1768,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       bmOptions.inPurgeable = true;
 
       Bitmap bitmap = BitmapFactory.decodeFile(lastCapturedMediaFile.getAbsolutePath(), bmOptions);
-      mImageView.setImageBitmap(bitmap);
+      mImageViewThumbnail.setImageBitmap(bitmap);
     }
   }
 
@@ -2252,7 +2226,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         alertDialog.show();
         return true;
 				
-			/* Delete all places */
       case R.id.context_places_delete_all:
         AlertDialog.Builder alertDialogDeleteAll = new AlertDialog.Builder(this);
         alertDialogDeleteAll.setMessage(getString(R.string.delete_all_places));
@@ -2296,7 +2269,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
   public boolean onOptionsItemSelected(MenuItem item) {
     switch(item.getItemId()) {
 			
-			/* all captures */
       case R.id.mycamera_menu_all_captures:
         if(allCaptures == null || allCaptures.size() <= 0) {
           Toast.makeText(this, getString(R.string.no_places), Toast.LENGTH_SHORT).show();
@@ -2312,7 +2284,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         }
         return true;
 			
-			/* picture size / video */
       case R.id.mycamera_menu_picture_size:
         if(!isVideoCameraMode) {
           if(frameLayout.findViewById(R.id.picture_sizes_list_view) != null) {
@@ -2320,7 +2291,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
           } else {
             removeSettingsViews();
             frameLayout.addView(mListViewPictureSizes,
-                new LinearLayout.LayoutParams(ImageUtils.getPixels(density, 200),
+                new LinearLayout.LayoutParams(ImageUtils.getPixelsFromDps(200, this),
                     LayoutParams.WRAP_CONTENT));
           }
         } else {
@@ -2329,49 +2300,45 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
           } else {
             removeSettingsViews();
             frameLayout.addView(mListViewVideoSizes,
-                new LinearLayout.LayoutParams(ImageUtils.getPixels(density, 200),
+                new LinearLayout.LayoutParams(ImageUtils.getPixelsFromDps(200, this),
                     LayoutParams.WRAP_CONTENT));
           }
         }
         return true;
 				
-			/* white balance */
       case R.id.mycamera_menu_white_balance:
         if(frameLayout.findViewById(R.id.white_balance_list_view) != null) {
           frameLayout.removeView(mListViewWhiteBalance);
         } else {
           removeSettingsViews();
           frameLayout.addView(mListViewWhiteBalance,
-              new LinearLayout.LayoutParams(ImageUtils.getPixels(density, 200),
+              new LinearLayout.LayoutParams(ImageUtils.getPixelsFromDps(200, this),
                   LayoutParams.WRAP_CONTENT));
         }
         return true;
 		
-			/* color effect */
       case R.id.mycamera_menu_color_effect:
         if(frameLayout.findViewById(R.id.color_effects_list_view) != null) {
           frameLayout.removeView(mListViewColorEffects);
         } else {
           removeSettingsViews();
           frameLayout.addView(mListViewColorEffects,
-              new LinearLayout.LayoutParams(ImageUtils.getPixels(density, 200),
+              new LinearLayout.LayoutParams(ImageUtils.getPixelsFromDps(200, this),
                   LayoutParams.WRAP_CONTENT));
         }
         return true;
 				
-			/* scene mode */
       case R.id.mycamera_menu_scene_mode:
         if(frameLayout.findViewById(R.id.scene_modes_list_view) != null) {
           frameLayout.removeView(mListViewSceneModes);
         } else {
           removeSettingsViews();
           frameLayout.addView(mListViewSceneModes,
-              new LinearLayout.LayoutParams(ImageUtils.getPixels(density, 200),
+              new LinearLayout.LayoutParams(ImageUtils.getPixelsFromDps(200, this),
                   LayoutParams.WRAP_CONTENT));
         }
         return true;
 			
-			/* flash auto */
       case R.id.mycamera_menu_flash_auto:
         item.setChecked(true);
         Parameters p = mCamera.getParameters();
@@ -2384,7 +2351,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         mCamera.startPreview();
         return true;
 				
-			/* flash on */
       case R.id.mycamera_menu_flash_on:
         item.setChecked(true);
         if(isVideoCameraMode) {
@@ -2401,7 +2367,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         }
         return true;
 			
-			/* flash off */
       case R.id.mycamera_menu_flash_off:
         item.setChecked(true);
         if(isVideoCameraMode) {
@@ -2419,7 +2384,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         }
         return true;
 				
-			/* exposure compensation */
       case R.id.mycamera_menu_exposure_comp:
         if(frameLayout.findViewById(R.id.the_brightness_bar_layout) != null) {
           frameLayout.removeView(mBrightnessBarLayout);
@@ -2430,7 +2394,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         }
         return true;
 			
-			/* show left controls */
       case R.id.mycamera_menu_left_controls_show:
         if(this.findViewById(R.id.activity_photo_left_controls) == null) {
           activityLayout.addView(leftControlsLayout, 0);
@@ -2438,7 +2401,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         }
         return true;
 				
-			/* hide left controls */
       case R.id.mycamera_menu_left_controls_hide:
         if(this.findViewById(R.id.activity_photo_left_controls) != null) {
           activityLayout.removeView(leftControlsLayout);
@@ -2446,17 +2408,14 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         }
         return true;
 				
-			/* reset camera */
       case R.id.mycamera_menu_reset_camera:
         showAlertDialogToResetCamera();
         return true;
 			
-			/* application settings */
       case R.id.mycamera_menu_app_settings:
         startActivity(new Intent(this, PrefsActivity.class));
         return true;
 			
-			/* device settings */
       case R.id.mycamera_menu_device_settings:
         startActivity(new Intent(Settings.ACTION_SETTINGS));
         return true;
