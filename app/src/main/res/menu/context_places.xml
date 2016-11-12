@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android" >
-    
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
     <item
         android:id="@+id/context_places_send"
-        android:title="Send" />
-    
+        android:title="@string/send"/>
+
     <item
         android:id="@+id/context_places_map"
-        android:title="Show on map" />
-    
+        android:title="@string/show_on_map"/>
+
     <item
         android:id="@+id/context_places_delete"
-        android:title="Delete" />
-    
+        android:title="@string/delete"/>
+
     <item
         android:id="@+id/context_places_delete_all"
-        android:title="Delete all" />
+        android:title="@string/delete_all"/>
 
 </menu>
