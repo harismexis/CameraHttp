@@ -2,9 +2,10 @@ package eu.cuteapps.camerahttp.mysqlite;
 
 public class Capture {
 
-  public static final String TYPE_IMAGE = "image";
   public static final String TYPE_VIDEO = "video";
+  public static final String TYPE_IMAGE = "image";
   public static final String TYPE_AUDIO = "audio";
+  public static final String TYPE_NONE = "none";
 
   private String id;
   private String latitude;
@@ -21,7 +22,9 @@ public class Capture {
   }
 
   public String getAllCaptureInfoToString() {
-    return "No " + id + ":\n" + "Latitude = " + latitude + "\n" + "Longitude = " + longitude;
+    return "No " + id + ":\n" +
+        "Latitude = " + latitude + "\n" +
+        "Longitude = " + longitude;
   }
 
   public String getId() {

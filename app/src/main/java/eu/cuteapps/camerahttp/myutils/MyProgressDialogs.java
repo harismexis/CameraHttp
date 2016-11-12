@@ -12,16 +12,4 @@ public class MyProgressDialogs {
 		progressDialog.setProgressStyle(android.R.attr.progressBarStyleSmall);
 		return progressDialog;
 	}
-	
-	public static ProgressDialog getCircleProgressDialogStyleSmallTitle(Context context, String message) {
-		ProgressDialog progressDialog = new ProgressDialog(context);
-		progressDialog.setCancelable(true);
-		progressDialog.setMessage(message);
-		progressDialog.setProgressStyle(android.R.attr.progressDrawable);
-		return progressDialog;
-	}
-	
-	
-	
-
 }
