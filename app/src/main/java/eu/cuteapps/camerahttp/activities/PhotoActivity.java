@@ -124,6 +124,8 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
   private Location mLastLocation;
   private GoogleApiClient mGoogleApiClient;
 
+  private CapturePhotoTask capturePhotoTask;
+
   private boolean isFlashModeSupported = false;
   private boolean isFlashModeAUTOSupported = false;
   private boolean isFlashModeONSupported = false;
@@ -321,19 +323,16 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
 					
 					/* Update Video / Picture size */
           if(isVideoCameraMode) {
-						
-						/* Update Video Size ListView */
             final String selectedVideoSizeToString = String.valueOf(selectedVideoSize.width) +
                 " x " + String.valueOf(selectedVideoSize.height);
             mListViewVideoSizes.setItemChecked(mVideoSizes.indexOf(selectedVideoSizeToString), true);
           } else {
-						/* Update Camera Picture Size */
             mCamera.stopPreview();
             Parameters params = mCamera.getParameters();
             params.setPictureSize(selectedPictureSize.width, selectedPictureSize.height);
             mCamera.setParameters(params);
             mCamera.startPreview();
-						
+
             final String selectedPictureSizeToString = String.valueOf(selectedPictureSize.width) +
                 " x " + String.valueOf(selectedPictureSize.height);
             mListViewPictureSizes.setItemChecked(mPictureSizes.indexOf(selectedPictureSizeToString),
@@ -636,12 +635,12 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       public void onItemClick(AdapterView<?> parent, View item, int position, long id) {
         String selectedSceneMode = mSupportedSceneModesList.get(position);
         try {
-          String userMessage = "";
+          String userMessage = Constants.EMPTY_STRING;
           mCamera.stopPreview();
           Parameters p = mCamera.getParameters();
 					
 					/* 1. Set color effect and white balance to default */
-          String previousWhiteBalance = "";
+          String previousWhiteBalance = Constants.EMPTY_STRING;
           if(isWhiteBalanceSupported) {
             previousWhiteBalance = p.getWhiteBalance();
             // p.setWhiteBalance(defaultWhiteBalance);
@@ -649,7 +648,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
             // indexOf(defaultWhiteBalance), true);
           }
 
-          String previousColorEffect = "";
+          String previousColorEffect = Constants.EMPTY_STRING;
           if(isColorEffectSupported) {
             previousColorEffect = p.getColorEffect();
             p.setColorEffect(defaultColorEffect);
@@ -682,8 +681,8 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
           }
 					
 					/* 4. Notify user for affected parameters */
-          if(!userMessage.equals("")) {
-            Toast.makeText(PhotoActivity.this, userMessage, Toast.LENGTH_LONG).show();
+          if(!userMessage.equals(Constants.EMPTY_STRING)) {
+            Toast.makeText(PhotoActivity.this, userMessage.trim(), Toast.LENGTH_LONG).show();
           }
         } catch(Exception e) {
           Toast.makeText(PhotoActivity.this, R.string.error_setting_scene_mode,
@@ -708,7 +707,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       public void onItemClick(AdapterView<?> parent, View item, int position, long id) {
         String selectedWhiteBalance = mSupportedWhiteBalanceList.get(position);
         try {
-          String userMessage = "";
+          String userMessage = Constants.EMPTY_STRING;
           mCamera.stopPreview();
           Parameters p = mCamera.getParameters();
 
@@ -746,8 +745,8 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
           mCamera.startPreview();
 
           // 4. Alert user for affected parameters
-          if(!userMessage.equals("")) {
-            Toast.makeText(PhotoActivity.this, userMessage, Toast.LENGTH_LONG).show();
+          if(!userMessage.equals(Constants.EMPTY_STRING)) {
+            Toast.makeText(PhotoActivity.this, userMessage.trim(), Toast.LENGTH_LONG).show();
           }
         } catch(Exception e) {
           Toast.makeText(PhotoActivity.this, R.string.error_setting_white_balance,
@@ -772,7 +771,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       public void onItemClick(AdapterView<?> parent, View item, int position, long id) {
         String selectedColorEffect = mSupportedColorEffectsList.get(position);
         try {
-          String userMessage = "";
+          String userMessage = Constants.EMPTY_STRING;
           mCamera.stopPreview();
           Parameters p = mCamera.getParameters();
 
@@ -810,8 +809,8 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
           mCamera.startPreview();
 
           // 4. Alert user for affected parameters
-          if(!userMessage.equals("")) {
-            Toast.makeText(PhotoActivity.this, userMessage, Toast.LENGTH_LONG).show();
+          if(!userMessage.equals(Constants.EMPTY_STRING)) {
+            Toast.makeText(PhotoActivity.this, userMessage.trim(), Toast.LENGTH_LONG).show();
           }
         } catch(Exception e) {
           Toast.makeText(PhotoActivity.this, R.string.error_setting_color_effect,
@@ -836,7 +835,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
       @Override
       public void onItemClick(AdapterView<?> parent, View item, int position, long id) {
         final String selectedPictureSizeToString = mPictureSizes.get(position);
-				/* Update selected Picture Size */
         try {
           for(int i = 0; i < mSupportedPictureSizesList.size(); i++) {
             final Size size = mSupportedPictureSizesList.get(i);
@@ -892,7 +890,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     });
   }
 
-  /* Read Supported Camera Settings and update Settings Views with values */
   private void readCameraSettingsAndSetUpSettingsViews(Camera tCamera) {
     Parameters p = tCamera.getParameters();
 		/* Read Flash Mode */
@@ -1062,24 +1059,22 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     }
   }
 
-  /* Restores camera settings and updates Settings Views */
   private void restoreCameraSettingsAndUpdateSettingsViews() {
-
     final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
     mCamera.stopPreview();
     Parameters p = mCamera.getParameters();
 		
-		/* Restore Camera Effects (but not when app is first launched) */
+		/* Restore Camera Effects (not when app is first launched) */
     if(!restoreCameraEffectsInOnResume) {
       restoreCameraEffectsInOnResume = true;
     } else {
-			/* Restore Zoom */
+
       if(isZoomSupported) {
         final int lastZoom = prefs.getInt(Prefs.PREF_ZOOM, defaultZoom);
         p.setZoom(lastZoom);
         zoomBar.setProgress(lastZoom);
       }
-			/* Restore Brightness */
+
       if(isExposureCompensationSupported) {
         final int lastExposureCompensation = prefs.getInt(Prefs.PREF_EXPOSURE_COMPENSATION,
             defaultExposureCompensation);
@@ -1088,21 +1083,21 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
             Math.abs(minExposureCompensation);
         brightnessBar.setProgress(lastBrightnessProgressValue);
       }
-			/* Restore Scene Mode */
+
       if(isSceneModeSupported) {
         final String lastSceneMode = prefs.getString(Prefs.PREF_SCENE_MODE,
             defaultSceneMode);
         p.setSceneMode(lastSceneMode);
         mListViewSceneModes.setItemChecked(mSupportedSceneModesList.indexOf(lastSceneMode), true);
       }
-			/* Restore White Balance */
+
       if(isWhiteBalanceSupported) {
         final String lastWhiteBalance = prefs.getString(Prefs.PREF_WHITE_BALANCE,
             defaultWhiteBalance);
         p.setWhiteBalance(lastWhiteBalance);
         mListViewWhiteBalance.setItemChecked(mSupportedWhiteBalanceList.indexOf(lastWhiteBalance), true);
       }
-			/* Restore Color Effect */
+
       if(isColorEffectSupported) {
         final String lastColorEffect = prefs.getString(Prefs.PREF_COLOR_EFFECT,
             defaultColorEffect);
@@ -1110,28 +1105,18 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         mListViewColorEffects.setItemChecked(mSupportedColorEffectsList.indexOf(lastColorEffect), true);
       }
     }
-		
-		/* Restore camera mode (photo / video) */
     isVideoCameraMode = prefs.getBoolean(Prefs.PREF_VIDEO_CAMERA_MODE, false);
     mCamera.setParameters(p);
-		
-		/* Restore Picture And Video Size */
     restorePictureAndVideoSize();
-		
-		/* Restore Flash Mode */
     restoreFlashMode();
-
     mCamera.startPreview();
   }
 
-  /* Restores Picture / Video Size and updates Views */
   private void restorePictureAndVideoSize() {
-
     final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-		
+
 		/* Restore Picture Size */
     if(isPictureSizeSupported) {
-
       int lastPictureSizeWidth = -1;
       int lastPictureSizeHeight = -1;
 			
@@ -1196,38 +1181,28 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     }
   }
 
-  /* Saves camera settings */
   private void saveCameraSettings() {
     if(mCamera == null) {
       return;
     }
-
     Parameters p = mCamera.getParameters();
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
     SharedPreferences.Editor editor = prefs.edit();
-		
-		/* Save Zoom */
     if(isZoomSupported) {
       editor.putInt(Prefs.PREF_ZOOM, p.getZoom());
     }
-		/* Save Exposure Compensation */
     if(isExposureCompensationSupported) {
       editor.putInt(Prefs.PREF_EXPOSURE_COMPENSATION, p.getExposureCompensation());
     }
-		/* Save Scene Mode */
     if(isSceneModeSupported) {
       editor.putString(Prefs.PREF_SCENE_MODE, p.getSceneMode());
     }
-		/* Save White Balance */
     if(isWhiteBalanceSupported) {
       editor.putString(Prefs.PREF_WHITE_BALANCE, p.getWhiteBalance());
     }
-		/* Save Color Effect */
     if(isColorEffectSupported) {
       editor.putString(Prefs.PREF_COLOR_EFFECT, p.getColorEffect());
     }
-		
-		/* Save last captured media file */
     if(lastCapturedMediaFile != null) {
       editor.putString(Prefs.PREF_LAST_CAPTURED_FILE_PATH, lastCapturedMediaFile.getAbsolutePath());
     } else {
@@ -1236,7 +1211,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     editor.putBoolean(Prefs.PREF_VIDEO_CAMERA_MODE, isVideoCameraMode);
     editor.putBoolean(Prefs.PREF_BACK_CAMERA, isFacingBackCamera);
     editor.commit();
-
     savePictureAndVideoSize();
     saveFlashMode();
   }
@@ -1244,8 +1218,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
   private void savePictureAndVideoSize() {
     final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
     SharedPreferences.Editor editor = settings.edit();
-		
-		/* Save Picture Size */
     if(isPictureSizeSupported) {
       if(isFacingBackCamera) {
         editor.putInt(Prefs.PREF_BACK_CAMERA_PICTURE_SIZE_WIDTH, selectedPictureSize.width);
@@ -1255,8 +1227,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         editor.putInt(Prefs.PREF_FRONT_CAMERA_PICTURE_SIZE_HEIGHT, selectedPictureSize.height);
       }
     }
-		
-		/* Save Video Size */
     if(isVideoSizeSupported) {
       if(isFacingBackCamera) {
         editor.putInt(Prefs.PREF_BACK_CAMERA_VIDEO_SIZE_WIDTH, selectedVideoSize.width);
@@ -1272,81 +1242,64 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
   private void resetCameraSettingsAndSettingsViews() {
     mCamera.stopPreview();
     Parameters parameters = mCamera.getParameters();
-		
-		/* Reset Flash Mode */
     if(isFlashModeSupported) {
       parameters.setFlashMode(Parameters.FLASH_MODE_OFF);
     }
-		/* Reset Zoom */
     if(isZoomSupported) {
       parameters.setZoom(defaultZoom);
       zoomBar.setProgress(defaultZoom);
     }
-		/* Reset Exposure */
     if(isExposureCompensationSupported) {
       parameters.setExposureCompensation(defaultExposureCompensation);
       brightnessBar.setProgress(defaultExposureCompensation + Math.abs(minExposureCompensation));
     }
-		/* Reset Scene Mode */
     if(isSceneModeSupported) {
       parameters.setSceneMode(defaultSceneMode);
       mListViewSceneModes.setItemChecked(mSupportedSceneModesList.indexOf(defaultSceneMode), true);
     }
-		/* Reset White Balance */
     if(isWhiteBalanceSupported) {
       parameters.setWhiteBalance(defaultWhiteBalance);
       mListViewWhiteBalance.setItemChecked(mSupportedWhiteBalanceList.indexOf(defaultWhiteBalance), true);
     }
-		/* Reset Color Effect */
     if(isColorEffectSupported) {
       parameters.setColorEffect(defaultColorEffect);
       mListViewColorEffects.setItemChecked(mSupportedColorEffectsList.indexOf(defaultColorEffect), true);
     }
-		/* Reset Picture Size */
     if(isPictureSizeSupported) {
       final String defaultPictureSizeToString = String.valueOf(defaultPictureSize.width) +
           " x " + String.valueOf(defaultPictureSize.height);
       mListViewPictureSizes.setItemChecked(mPictureSizes.indexOf(defaultPictureSizeToString), true);
     }
-		/* Reset Video Size */
     if(isVideoSizeSupported) {
       final String defaultVideoSizeToString = String.valueOf(defaultVideoSize.width) +
           " x " + String.valueOf(defaultVideoSize.height);
       mListViewVideoSizes.setItemChecked(mVideoSizes.indexOf(defaultVideoSizeToString), true);
     }
-
     mCamera.setParameters(parameters);
     mCamera.startPreview();
   }
 
   private void resetCameraSettingsViews() {
-		/* Set Zoom to default */
     if(isZoomSupported) {
       zoomBar.setProgress(defaultZoom);
     }
-		/* Set Exposure Compensation to default */
     if(isExposureCompensationSupported) {
       brightnessBar.setProgress(defaultExposureCompensation);
     }
-		/* Set Scene Mode to default */
     if(isSceneModeSupported) {
       mListViewSceneModes.setItemChecked(mSupportedSceneModesList.indexOf(defaultSceneMode), true);
     }
-		/* Set White Balance to default */
     if(isWhiteBalanceSupported) {
       mListViewWhiteBalance.setItemChecked(mSupportedWhiteBalanceList.indexOf(defaultWhiteBalance), true);
     }
-		/* Set Color Effect to default */
     if(isColorEffectSupported) {
       mListViewColorEffects.setItemChecked(mSupportedColorEffectsList.indexOf(defaultColorEffect), true);
     }
-		/* Set Picture Size to default */
     if(isPictureSizeSupported) {
       final String defaultPictureSizeToString = String.valueOf(defaultPictureSize.width) +
           " x " + String.valueOf(defaultPictureSize.height);
       mListViewPictureSizes.setItemChecked(mPictureSizes.indexOf(defaultPictureSizeToString), true);
     }
-		/* Set Video Size to default */
     if(isVideoSizeSupported) {
       final String defaultVideoSizeToString = String.valueOf(defaultVideoSize.width) +
           " x " + String.valueOf(defaultVideoSize.height);
@@ -1354,32 +1307,25 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     }
   }
 
-  /* Restores other preferences (apart from camera settings) */
   private void restorePreferences() {
     final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-		
-		/* Interval for periodic capture */
     try {
       periodicCaptureInterval = 1000 * Integer
           .parseInt(settings.getString(Prefs.PREF_PERIODIC_CAPTURE_INTERVAL, "2"));
     } catch(Exception e) {
       periodicCaptureInterval = 2000;
     }
-		
-		/* Time delay after capture */
+
     try {
       delayAfterCapture = 1000 * Integer.parseInt(settings
           .getString(Prefs.PREF_DELAY_AFTER_CAPTURE, "1"));
     } catch(Exception e) {
       delayAfterCapture = 1000;
     }
-		
-		/* Shutter sound enabled / disabled */
+
     final String shutter = settings.getString(Prefs.PREF_SHUTTER_SOUND, "enabled");
     isShutterSoundEnabled = shutter.equals("enabled");
   }
-	
-	/* Location related callbacks */
 
   @Override
   public void onConnected(Bundle connectionHint) {
@@ -1397,8 +1343,8 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     }
     mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
     LocationRequest mLocationRequest = new LocationRequest();
-    mLocationRequest.setInterval(10000);
-    mLocationRequest.setFastestInterval(5000);
+    mLocationRequest.setInterval(LocationUtils.LOCATION_UPDATE_INTERVAL);
+    mLocationRequest.setFastestInterval(LocationUtils.LOCATION_UPDATE_FASTEST_INTERVAL);
     mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
   }
@@ -1506,16 +1452,12 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     }
   }
 
-  /* On user click, reverses camera back and front */
   public void onClickReverseCamera(View view) {
-    	
-		/* Check if Preview is busy */
     if(isPreviewBusy()) {
       Toast.makeText(this, R.string.camera_is_busy, Toast.LENGTH_SHORT).show();
       return;
     }
 		
-		/* Check if device supports FRONT CAMERA */
     if(!isFrontCameraSupported) {
       Toast.makeText(this, R.string.front_camera_is_not_supported, Toast.LENGTH_SHORT).show();
       return;
@@ -1555,7 +1497,6 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
             Parameters.FLASH_MODE_OFF));
         mCamera.setParameters(params);
       }
-
       mCamera.startPreview();
     } catch(Exception e) {
       Toast.makeText(this, R.string.error_reversing_camera, Toast.LENGTH_LONG).show();
@@ -1604,11 +1545,10 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
         e.printStackTrace();
       }
 			
-			/* Store Location to database */
+			/* Store Capture to database */
       final SharedPreferences settings = PreferenceManager
           .getDefaultSharedPreferences(PhotoActivity.this);
-      if(settings.getString(Prefs.PREF_STORE_CAPTURES_TO_DB, "yes")
-          .equals("yes")) {
+      if(settings.getString(Prefs.PREF_STORE_CAPTURES_TO_DB, "yes").equals("yes")) {
 
         boolean captureSavedSuccessfully = datasource.addCaptureToDatabase(
             LocationUtils.getStringLatitude(mLastLocation),
@@ -1644,7 +1584,9 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
 				
 				/* Check to stop periodic capture  */
         if(!infinitePeriodicCapture) {
+
           counterPeriodicCapture--;
+
           if(counterPeriodicCapture == 0) {
             stopPeriodicCapture();
             return;
@@ -1691,7 +1633,8 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
 
   private void capturePhoto() {
     removeSettingsViews();
-    new CapturePhotoTask().execute();
+    capturePhotoTask = new CapturePhotoTask();
+    capturePhotoTask.execute();
   }
 
   private void restoreLastCapturedMediaAndSetThumbnail() {
@@ -1744,8 +1687,7 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
   private void setThumbnailPicFromVideo() {
     if(lastCapturedMediaFile != null) {
       final Bitmap bmThumbnail = ThumbnailUtils
-          .createVideoThumbnail(lastCapturedMediaFile.getAbsolutePath(),
-              Thumbnails.MICRO_KIND);
+          .createVideoThumbnail(lastCapturedMediaFile.getAbsolutePath(), Thumbnails.MICRO_KIND);
       mImageViewThumbnail.setImageBitmap(bmThumbnail);
     }
   }
@@ -1854,7 +1796,9 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
     @Override
     protected Boolean doInBackground(String... params) {
 			/* Update capture in database, and get captures from database */
-      final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(PhotoActivity.this);
+      final SharedPreferences settings = PreferenceManager.
+          getDefaultSharedPreferences(PhotoActivity.this);
+
       if(settings.getString(Prefs.PREF_STORE_CAPTURES_TO_DB, "yes").equals("yes")) {
 				
 				/* Add new capture to database */
@@ -2464,7 +2408,8 @@ public class PhotoActivity extends Activity implements ConnectionCallbacks,
 
       HttpResponse res;
       try {
-        final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(PhotoActivity.this);
+        final SharedPreferences settings = PreferenceManager
+            .getDefaultSharedPreferences(PhotoActivity.this);
         final HttpClient httpClient = new DefaultHttpClient();
         final MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);

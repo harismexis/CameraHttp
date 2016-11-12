@@ -20,12 +20,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
   public CameraPreview(Context context, Camera camera) {
     super(context);
     previewCamera = camera;
-    // Install a SurfaceHolder.Callback so we get notified when the
-    // underlying surface is created and destroyed.
     previewHolder = this.getHolder();
     previewHolder.addCallback(this);
 
-    // deprecated setting, but required on Android versions prior to 3.0
+    // required on Android versions prior to 3.0
     previewHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
   }
 
@@ -57,8 +55,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
       // ignore: tried to stop a non-existent preview
     }
 
-    // set preview size and make any resize, rotate or reformatting changes here -
-    // start preview with new settings
     try {
       previewCamera.setPreviewDisplay(this.previewHolder);
       previewCamera.startPreview();
