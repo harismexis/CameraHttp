@@ -295,16 +295,13 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
           saveFlashMode();
           closeCameraAndPreview();
           resetCameraSettingsViews();
-
-          /* Switch to photo camera mode */
-          if(isVideoCameraMode) {
+          
+          if(isVideoCameraMode) { /* Switch to photo camera */
             switchPhotoVideoBtn.setImageResource(R.mipmap.switch_video_cam);
             periodicCaptureButton.setVisibility(View.VISIBLE);
             videoButton.setVisibility(View.GONE);
             buttonTakePicture.setVisibility(View.VISIBLE);
-          }
-          /* Switch to video camera mode */
-          else {
+          } else { /* Switch to video camera */
             switchPhotoVideoBtn.setImageResource(R.mipmap.switch_photo_cam);
             periodicCaptureButton.setVisibility(View.GONE);
             videoButton.setVisibility(View.VISIBLE);
@@ -501,7 +498,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
     } else {
       c = getCameraInstance(Camera.CameraInfo.CAMERA_FACING_FRONT);
     }
-
     readCameraSettingsAndSetUpSettingsViews(c);
     c.release();
 
@@ -617,7 +613,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       }
     });
 
-    /* ListView for Scene Modes */
     mListViewSceneModes = new ListView(this);
     mSupportedSceneModesList = new ArrayList<>();
     final ArrayAdapter<String> sceneModesAdapter = new ArrayAdapter<>(this,
@@ -692,7 +687,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       }
     });
 
-    /* ListView White Balance */
     mListViewWhiteBalance = new ListView(this);
     mSupportedWhiteBalanceList = new ArrayList<>();
     final ArrayAdapter<String> whiteBalanceAdapter = new ArrayAdapter<>(this,
@@ -759,7 +753,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       }
     });
 
-    /* ListView Color Effects */
     mListViewColorEffects = new ListView(this);
     mSupportedColorEffectsList = new ArrayList<>();
     final ArrayAdapter<String> colorEffectsAdapter = new ArrayAdapter<>(this,
@@ -825,7 +818,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       }
     });
 
-    /* ListView Picture Sizes */
     mListViewPictureSizes = new ListView(this);
     mSupportedPictureSizesList = new ArrayList<>();
     mPictureSizes = new ArrayList<>();
@@ -850,7 +842,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
               break;
             }
           }
-
           mCamera.stopPreview();
           Parameters p = mCamera.getParameters();
           p.setPictureSize(selectedPictureSize.width, selectedPictureSize.height);
@@ -863,7 +854,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       }
     });
 
-    /* ListView with Video Sizes */
     mListViewVideoSizes = new ListView(this);
     mSupportedVideoSizesList = new ArrayList<>();
     mVideoSizes = new ArrayList<>();
@@ -1122,12 +1112,10 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
   private void restorePictureAndVideoSize() {
     final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
-    /* Restore Picture Size */
     if(isPictureSizeSupported) {
       int lastPictureSizeWidth = -1;
       int lastPictureSizeHeight = -1;
 
-      /* Get last Picture Size width and height */
       if(isFacingBackCamera) {
         lastPictureSizeWidth = prefs.getInt(Prefs.PREF_BACK_CAMERA_PICTURE_SIZE_WIDTH,
             defaultPictureSize.width);
@@ -1140,7 +1128,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
             defaultPictureSize.height);
       }
 
-      /* Update Picture Size and ListView Selection */
       if(lastPictureSizeWidth > 0 && lastPictureSizeHeight > 0) {
         Parameters params = mCamera.getParameters();
         params.setPictureSize(lastPictureSizeWidth, lastPictureSizeHeight);
@@ -1157,7 +1144,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       }
     }
 
-    /* Restore Video Size */
     if(isVideoSizeSupported) {
       int lastVideoSizeWidth = -1;
       int lastVideoSizeHeight = -1;
@@ -1174,7 +1160,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
             defaultVideoSize.height);
       }
 
-      /* Update Video Size and ListView selection */
       for(Size size : mSupportedVideoSizesList) {
         if(size.width == lastVideoSizeWidth && size.height == lastVideoSizeHeight) {
           selectedVideoSize = size;
@@ -1339,12 +1324,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
         PackageManager.PERMISSION_GRANTED &&
         ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
             PackageManager.PERMISSION_GRANTED) {
-      //    ActivityCompat#requestPermissions
-      // here to request the missing permissions, and then overriding
-      //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-      //                                          int[] grantResults)
-      // to handle the case where the user grants the permission. See the documentation
-      // for ActivityCompat#requestPermissions for more details.
       return;
     }
     mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
@@ -1471,7 +1450,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
 
     /* Reverse camera */
     try {
-      /* Save Photo Camera Flash Mode */
       if(!isVideoCameraMode && isFacingBackCamera) {
         final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = settings.edit();
@@ -1481,7 +1459,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       savePictureAndVideoSize();
       closeCameraAndPreview();
 
-      /* Get camera instance */
       if(isFacingBackCamera) {
         mCamera = getCameraInstance(Camera.CameraInfo.CAMERA_FACING_FRONT);
       } else {
@@ -1608,7 +1585,8 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
         final FileOutputStream fos = new FileOutputStream(lastCapturedMediaFile);
         fos.write(data);
         fos.close();
-        sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(lastCapturedMediaFile)));
+        sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
+            Uri.fromFile(lastCapturedMediaFile)));
         setThumbnailPic(thumbNailTargetWidth, thumbNailTargetHeight);
         if(!isShutterSoundEnabled) {
           audioManager.setStreamMute(AudioManager.STREAM_SYSTEM, false);
@@ -1634,7 +1612,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
   }
 
   private void restoreLastCapturedMediaAndSetThumbnail() {
-    /* Get the saved path of last capture photo */
     if(lastCapturedMediaFile == null) {
       final String path = PreferenceManager.getDefaultSharedPreferences(PhotoActivity.this)
           .getString(Prefs.PREF_LAST_CAPTURED_FILE_PATH, null);
@@ -1690,21 +1667,15 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
 
   private void setThumbnailPic(int target_w, int target_h) {
     if(lastCapturedMediaFile != null) {
-      /* Get the dimensions of the bitmap */
       BitmapFactory.Options bmOptions = new BitmapFactory.Options();
       bmOptions.inJustDecodeBounds = true;
       BitmapFactory.decodeFile(lastCapturedMediaFile.getAbsolutePath(), bmOptions);
       final int photoW = bmOptions.outWidth;
       final int photoH = bmOptions.outHeight;
-
-      /* Determine how much to scale down the image */
       final int scaleFactor = Math.min(photoW / target_w, photoH / target_h);
-
-      /* Decode the image file into a Bitmap sized to fill the View */
       bmOptions.inJustDecodeBounds = false;
       bmOptions.inSampleSize = scaleFactor;
       bmOptions.inPurgeable = true;
-
       Bitmap bitmap = BitmapFactory.decodeFile(lastCapturedMediaFile.getAbsolutePath(), bmOptions);
       mImageViewThumbnail.setImageBitmap(bitmap);
     }
@@ -1824,7 +1795,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
   private void stopVideoRecording() {
     mMediaRecorder.stop();
     releaseMediaRecorder();
-    /* Turn off FLASH if active */
     if(isFlashModeSupported) {
       Parameters params = mCamera.getParameters();
       if(params.getFlashMode().equals(Parameters.FLASH_MODE_TORCH)) {
@@ -1967,12 +1937,9 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       return false;
     }
 
-    /* Check flash mode */
     if(isFlashModeSupported) {
-
       menu.findItem(R.id.camera_menu_flash).setEnabled(true);
 
-      /* Flash AUTO */
       final MenuItem menuItemFlashAuto = menu.findItem(R.id.camera_menu_flash_auto);
       if(isFlashModeAUTOSupported) {
         if(isVideoCameraMode) {
@@ -1987,7 +1954,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
         menuItemFlashAuto.setEnabled(false);
       }
 
-      /* Flash Mode ON */
       final MenuItem menuItemFlashOn = menu.findItem(R.id.camera_menu_flash_on);
       if(isFlashModeONSupported) {
         menuItemFlashOn.setEnabled(true);
@@ -2004,9 +1970,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
         menuItemFlashOn.setEnabled(false);
       }
 
-      /* Flash Mode OFF */
       final MenuItem menuItemFlashOff = menu.findItem(R.id.camera_menu_flash_off);
-
       if(isFlashModeOFFSupported) {
         menuItemFlashOff.setEnabled(true);
         if(isVideoCameraMode) {
@@ -2025,35 +1989,30 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       menu.findItem(R.id.camera_menu_flash).setEnabled(false);
     }
 
-    /* Check Exposure Compensation */
     if(!isExposureCompensationSupported) {
       menu.findItem(R.id.camera_menu_exposure_comp).setEnabled(false);
     } else {
       menu.findItem(R.id.camera_menu_exposure_comp).setEnabled(true);
     }
 
-    /* Check Scene Mode */
     if(!isSceneModeSupported) {
       menu.findItem(R.id.camera_menu_scene_mode).setEnabled(false);
     } else {
       menu.findItem(R.id.camera_menu_scene_mode).setEnabled(true);
     }
 
-    /* Check White Balance */
     if(!isWhiteBalanceSupported) {
       menu.findItem(R.id.camera_menu_white_balance).setEnabled(false);
     } else {
       menu.findItem(R.id.camera_menu_white_balance).setEnabled(true);
     }
 
-    /* Check Color Effect */
     if(!isColorEffectSupported) {
       menu.findItem(R.id.camera_menu_color_effect).setEnabled(false);
     } else {
       menu.findItem(R.id.camera_menu_color_effect).setEnabled(true);
     }
 
-    /* Check Picture / Video Size */
     final MenuItem item = menu.findItem(R.id.camera_menu_picture_size);
     if(!isVideoCameraMode) {
       item.setTitle(R.string.picture_size);
