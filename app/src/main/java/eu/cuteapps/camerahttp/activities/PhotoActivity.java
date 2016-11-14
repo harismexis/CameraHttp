@@ -296,7 +296,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
           closeCameraAndPreview();
           resetCameraSettingsViews();
 
-					/* Switch to photo camera mode */
+          /* Switch to photo camera mode */
           if(isVideoCameraMode) {
             switchPhotoVideoBtn.setImageResource(R.mipmap.switch_video_cam);
             periodicCaptureButton.setVisibility(View.VISIBLE);
