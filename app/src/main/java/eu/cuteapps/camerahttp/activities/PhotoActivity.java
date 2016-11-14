@@ -2003,8 +2003,8 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       } else {
         menuItemFlashOn.setEnabled(false);
       }
-			
-			/* Flash Mode OFF */
+
+      /* Flash Mode OFF */
       final MenuItem menuItemFlashOff = menu.findItem(R.id.camera_menu_flash_off);
 
       if(isFlashModeOFFSupported) {
