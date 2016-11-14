@@ -652,8 +652,10 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
               mListViewWhiteBalance.setItemChecked(
                   mSupportedWhiteBalanceList.indexOf(newWhiteBalance),
                   true);
-              whiteBalanceMessage += "White Balance changed from " + previousWhiteBalance +
-                  " to " + newWhiteBalance;
+//              whiteBalanceMessage += "White Balance changed from " + previousWhiteBalance +
+//                  " to " + newWhiteBalance;
+              whiteBalanceMessage = getString(R.string.white_balance_changed_from_to,
+                  previousWhiteBalance, newWhiteBalance);
             }
           }
 
@@ -665,8 +667,10 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
               mListViewColorEffects.setItemChecked(
                   mSupportedColorEffectsList.indexOf(newColorEffect),
                   true);
-              colorEffectMessage += "Color Effect changed from " + previousColorEffect +
-                  " to " + newColorEffect;
+//              colorEffectMessage += "Color Effect changed from " + previousColorEffect +
+//                  " to " + newColorEffect;
+              colorEffectMessage = getString(R.string.color_effect_changed_from_to,
+                  previousColorEffect, newColorEffect);
             }
           }
 
@@ -709,8 +713,10 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
               p.setSceneMode(defaultSceneMode);
               mListViewSceneModes.setItemChecked(mSupportedSceneModesList.indexOf(defaultSceneMode),
                   true);
-              sceneModeMessage = "Scene Mode changed from " + prevSceneMode +
-                  " to " + defaultSceneMode;
+//              sceneModeMessage = "Scene Mode changed from " + prevSceneMode +
+//                  " to " + defaultSceneMode;
+              sceneModeMessage = getString(R.string.scene_mode_changed_from_to,
+                  prevSceneMode, defaultSceneMode);
             }
           }
 
@@ -722,8 +728,10 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
               p.setColorEffect(defaultColorEffect);
               mListViewColorEffects.setItemChecked(mSupportedColorEffectsList.
                   indexOf(defaultColorEffect), true);
-              colorEffectMessage += "Color effect changed from " + previousColorEffect +
-                  " to " + defaultColorEffect;
+//              colorEffectMessage += "Color effect changed from " + previousColorEffect +
+//                  " to " + defaultColorEffect;
+              colorEffectMessage = getString(R.string.color_effect_changed_from_to,
+                  previousColorEffect, defaultColorEffect);
             }
           }
 
@@ -775,8 +783,10 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
               p.setSceneMode(defaultSceneMode);
               mListViewSceneModes.setItemChecked(mSupportedSceneModesList.
                   indexOf(defaultSceneMode), true);
-              sceneModeMessage += "Scene Mode changed from " + prevSceneMode +
-                  " to " + defaultSceneMode;
+//              sceneModeMessage += "Scene Mode changed from " + prevSceneMode +
+//                  " to " + defaultSceneMode;
+              sceneModeMessage = getString(R.string.scene_mode_changed_from_to,
+                  prevSceneMode, defaultSceneMode);
             }
           }
 
@@ -788,8 +798,10 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
               p.setWhiteBalance(defaultWhiteBalance);
               mListViewWhiteBalance.setItemChecked(mSupportedWhiteBalanceList.
                   indexOf(defaultWhiteBalance), true);
-              whiteBalanceMessage += "White Balance changed from " + prevWhiteBalance +
-                  " to " + defaultWhiteBalance;
+//              whiteBalanceMessage += "White Balance changed from " + prevWhiteBalance +
+//                  " to " + defaultWhiteBalance;
+              whiteBalanceMessage = getString(R.string.white_balance_changed_from_to,
+                  prevWhiteBalance, defaultWhiteBalance);
             }
           }
 

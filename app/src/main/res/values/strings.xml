@@ -80,4 +80,8 @@
     <string name="show_on_map">Show on map</string>
     <string name="delete">Delete</string>
     <string name="delete_all">Delete all</string>
+    <string name="white_balance_changed_from_to">White balance changed from %s to %s</string>
+    <string name="color_effect_changed_from_to">Color effect changed from %s to %s</string>
+    <string name="scene_mode_changed_from_to">Scene mode changed from %s to %s</string>
+
 </resources>
