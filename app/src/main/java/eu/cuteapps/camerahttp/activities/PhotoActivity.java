@@ -295,7 +295,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
           saveFlashMode();
           closeCameraAndPreview();
           resetCameraSettingsViews();
-          
+
           if(isVideoCameraMode) { /* Switch to photo camera */
             switchPhotoVideoBtn.setImageResource(R.mipmap.switch_video_cam);
             periodicCaptureButton.setVisibility(View.VISIBLE);
@@ -385,14 +385,13 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
             mCamera.unlock();
             mMediaRecorder.setCamera(mCamera);
 
-            if(isFacingBackCamera) { /* Back camera */
+            if(isFacingBackCamera) {
               mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
               mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
               camcorderProfile = CamcorderProfile.get(Camera.CameraInfo.CAMERA_FACING_BACK,
                   CamcorderProfile.QUALITY_HIGH);
               mMediaRecorder.setProfile(camcorderProfile);
-
-            } else { /* Front Camera */
+            } else {
               mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
               mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
               camcorderProfile = CamcorderProfile.get(Camera.CameraInfo.CAMERA_FACING_FRONT,
@@ -428,7 +427,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       }
     });
 
-    /* Thumbnail icon */
     mImageViewThumbnail = (ImageView) findViewById(R.id.activity_photo_camera_thumbnail);
     mImageViewThumbnail.setScaleType(ScaleType.FIT_XY);
     thumbNailTargetWidth = (int) getResources().getDimension(R.dimen.thumbnail_imageview_width);
@@ -542,7 +540,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
     final LayoutInflater layoutInflater = (LayoutInflater) getSystemService(
         Context.LAYOUT_INFLATER_SERVICE);
 
-    /* Zoom Bar */
     mZoomBarLayout = (LinearLayout) layoutInflater.inflate(R.layout.zoom_layout, null, false);
     mZoomBarLayout.setOnClickListener(new OnClickListener() {
       @Override
@@ -577,7 +574,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       }
     });
 
-    /* Brightness Bar */
     mBrightnessBarLayout = (LinearLayout) layoutInflater.inflate(R.layout.brightness_bar_layout,
         null, false);
     mBrightnessBarLayout.setOnClickListener(new OnClickListener() {
