@@ -321,7 +321,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
 
           initCameraPreview();
 
-					/* Update Video / Picture size */
+          /* Update Video / Picture size */
           if(isVideoCameraMode) {
             final String selectedVideoSizeToString = String.valueOf(selectedVideoSize.width) +
                 " x " + String.valueOf(selectedVideoSize.height);
