@@ -65,20 +65,8 @@ public class MySQLiteCapturesDataSource {
     return true;
   }
 
-  public Capture getCaptureWithMaxId() {
-    final String q = "SELECT * from Captures ORDER BY Id DESC LIMIT 1";
-    Capture lastCapture = null;
-    Cursor c = database.rawQuery(q, null);
-    if(c == null || c.getCount() == 0) {
-      return null;
-    }
-    c.moveToFirst();
-    lastCapture = cursorToModel(c);
-    return lastCapture;
-  }
-
   public ArrayList<Capture> getAllModels() {
-    final ArrayList<Capture> models = new ArrayList<Capture>();
+    final ArrayList<Capture> models = new ArrayList<>();
     final Cursor cursor = database.query(MySQLiteCapturesHelper.TABLE_CAPTURES,
         allColumns, null, null, null, null, null);
     cursor.moveToFirst();

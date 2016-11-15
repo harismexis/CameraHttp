@@ -21,7 +21,7 @@ import eu.cuteapps.camerahttp.mysqlite.Capture;
 public class CapturesAdapter extends ArrayAdapter<Capture> {
 
   private Context context;
-  private ArrayList<Capture> captures = null;
+  private ArrayList<Capture> captures;
 
   private int thumbNailTargetWidth;
   private int thumbNailTargetHeight;
@@ -42,23 +42,15 @@ public class CapturesAdapter extends ArrayAdapter<Capture> {
 
   @Override
   public View getView(int position, View convertView, ViewGroup parent) {
-
     ViewHolder viewHolder;
-
     if(convertView == null) {
-      // inflate the layout
       LayoutInflater inflater = ((Activity) context).getLayoutInflater();
       convertView = inflater.inflate(R.layout.capture_row, parent, false);
-
-      // well set up the ViewHolder
       viewHolder = new ViewHolder();
       viewHolder.imageView = (ImageView) convertView.findViewById(R.id.capture_row_icon);
       viewHolder.textView = (TextView) convertView.findViewById(R.id.capture_row_text);
-
-      // store the holder with the view.
       convertView.setTag(viewHolder);
     } else {
-      // we've just avoided calling findViewById() on resource everytime, just use the viewHolder
       viewHolder = (ViewHolder) convertView.getTag();
     }
 
@@ -70,37 +62,33 @@ public class CapturesAdapter extends ArrayAdapter<Capture> {
 
       if(mediaFilePath != null && mediaType != null) {
 
-        if(mediaType.equals(Capture.TYPE_IMAGE)) {
+        if(mediaType.equals(Capture.CAPTURE_TYPE_IMAGE)) {
 
-	    			/* Get the dimensions of the bitmap */
           BitmapFactory.Options bmOptions = new BitmapFactory.Options();
           bmOptions.inJustDecodeBounds = true;
           BitmapFactory.decodeFile(mediaFilePath, bmOptions);
           final int photoW = bmOptions.outWidth;
           final int photoH = bmOptions.outHeight;
-	    			
-	    			/* Determine how much to scale down the image */
-          final int scaleFactor = Math.min(photoW / thumbNailTargetWidth, photoH / thumbNailTargetHeight);
-	    			
-	    			/* Decode the image file into a Bitmap sized to fill the View */
+          final int scaleFactor = Math.min(photoW / thumbNailTargetWidth,
+              photoH / thumbNailTargetHeight);
           bmOptions.inJustDecodeBounds = false;
           bmOptions.inSampleSize = scaleFactor;
           bmOptions.inPurgeable = true;
-
           Bitmap bitmap = BitmapFactory.decodeFile(mediaFilePath, bmOptions);
+
           viewHolder.imageView.setImageBitmap(bitmap);
-        } else if(mediaType.equals(Capture.TYPE_VIDEO)) {
-          final Bitmap bmThumbnail = ThumbnailUtils.createVideoThumbnail(mediaFilePath, Thumbnails.MICRO_KIND);
+
+        } else if(mediaType.equals(Capture.CAPTURE_TYPE_VIDEO)) {
+          final Bitmap bmThumbnail = ThumbnailUtils.createVideoThumbnail(mediaFilePath,
+              Thumbnails.MICRO_KIND);
           viewHolder.imageView.setImageBitmap(bmThumbnail);
-        } else if(mediaType.equals(Capture.TYPE_AUDIO)) {
-          viewHolder.imageView.setImageDrawable(
-              context.getResources().getDrawable(R.mipmap.mic_dark));
+
+        } else if(mediaType.equals(Capture.CAPTURE_TYPE_AUDIO)) {
+          viewHolder.imageView.setImageDrawable(context.getResources().getDrawable(R.mipmap.mic_dark));
         }
       }
-
       viewHolder.textView.setText(captures.get(position).getAllCaptureInfoToString());
     }
-
     return convertView;
   }
 

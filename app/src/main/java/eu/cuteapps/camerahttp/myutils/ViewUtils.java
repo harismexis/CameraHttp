@@ -4,7 +4,7 @@ import android.content.Context;
 
 import android.util.TypedValue;
 
-public class ImageUtils {
+public class ViewUtils {
 
   public static int getPixelsFromDps(int dps, Context context) {
     return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
