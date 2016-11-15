@@ -106,6 +106,9 @@ import eu.cuteapps.camerahttp.myutils.NetUtils;
 public class PhotoActivity extends AppCompatActivity implements ConnectionCallbacks,
     OnConnectionFailedListener, LocationListener {
 
+  private static final int ONE_SECOND_IN_MILLIS = 1000;
+  private static final int TWO_SECONDS_IN_MILLIS = 2000;
+
   private int videoCameraFlashMode = Constants.VIDEO_CAMERA_FLASH_MODE_OFF;
 
   private int periodicCaptureInterval;
@@ -117,7 +120,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
   private AudioManager audioManager;
   private LinearLayout leftControlsLayout;
   private LinearLayout activityLayout;
-  private int delayAfterCapture = 1000;
+  private int delayAfterCapture = ONE_SECOND_IN_MILLIS;
   private boolean isShutterSoundEnabled = true;
   private File lastCapturedMediaFile;
 
@@ -491,7 +494,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
 
     /* Get last used camera to read its parameters */
     if(PreferenceManager.getDefaultSharedPreferences(this)
-        .getBoolean(Prefs.PREF_BACK_CAMERA, true)) {
+        .getBoolean(Prefs.PREF_IS_FACING_BACK_CAMERA, true)) {
       c = getCameraInstance(Camera.CameraInfo.CAMERA_FACING_BACK);
     } else {
       c = getCameraInstance(Camera.CameraInfo.CAMERA_FACING_FRONT);
@@ -501,7 +504,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
 
     /* Check if camera was in video camera mode so as to update buttons */
     isVideoCameraMode = PreferenceManager.getDefaultSharedPreferences(this)
-        .getBoolean(Prefs.PREF_VIDEO_CAMERA_MODE, false);
+        .getBoolean(Prefs.PREF_IS_VIDEO_CAMERA_MODE, false);
     if(isVideoCameraMode) {
       switchPhotoVideoBtn.setImageResource(R.mipmap.switch_photo_cam);
       buttonTakePicture.setVisibility(View.GONE);
@@ -652,8 +655,8 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
               mListViewWhiteBalance.setItemChecked(
                   mSupportedWhiteBalanceList.indexOf(newWhiteBalance),
                   true);
-              whiteBalanceMessage += "White Balance changed from " + previousWhiteBalance +
-                  " to " + newWhiteBalance;
+              whiteBalanceMessage = getString(R.string.white_balance_changed_from_to,
+                  previousWhiteBalance, newWhiteBalance);
             }
           }
 
@@ -665,8 +668,8 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
               mListViewColorEffects.setItemChecked(
                   mSupportedColorEffectsList.indexOf(newColorEffect),
                   true);
-              colorEffectMessage += "Color Effect changed from " + previousColorEffect +
-                  " to " + newColorEffect;
+              colorEffectMessage = getString(R.string.color_effect_changed_from_to,
+                  previousColorEffect, newColorEffect);
             }
           }
 
@@ -709,8 +712,8 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
               p.setSceneMode(defaultSceneMode);
               mListViewSceneModes.setItemChecked(mSupportedSceneModesList.indexOf(defaultSceneMode),
                   true);
-              sceneModeMessage = "Scene Mode changed from " + prevSceneMode +
-                  " to " + defaultSceneMode;
+              sceneModeMessage = getString(R.string.scene_mode_changed_from_to,
+                  prevSceneMode, defaultSceneMode);
             }
           }
 
@@ -722,8 +725,8 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
               p.setColorEffect(defaultColorEffect);
               mListViewColorEffects.setItemChecked(mSupportedColorEffectsList.
                   indexOf(defaultColorEffect), true);
-              colorEffectMessage += "Color effect changed from " + previousColorEffect +
-                  " to " + defaultColorEffect;
+              colorEffectMessage = getString(R.string.color_effect_changed_from_to,
+                  previousColorEffect, defaultColorEffect);
             }
           }
 
@@ -775,8 +778,8 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
               p.setSceneMode(defaultSceneMode);
               mListViewSceneModes.setItemChecked(mSupportedSceneModesList.
                   indexOf(defaultSceneMode), true);
-              sceneModeMessage += "Scene Mode changed from " + prevSceneMode +
-                  " to " + defaultSceneMode;
+              sceneModeMessage = getString(R.string.scene_mode_changed_from_to,
+                  prevSceneMode, defaultSceneMode);
             }
           }
 
@@ -788,8 +791,8 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
               p.setWhiteBalance(defaultWhiteBalance);
               mListViewWhiteBalance.setItemChecked(mSupportedWhiteBalanceList.
                   indexOf(defaultWhiteBalance), true);
-              whiteBalanceMessage += "White Balance changed from " + prevWhiteBalance +
-                  " to " + defaultWhiteBalance;
+              whiteBalanceMessage = getString(R.string.white_balance_changed_from_to,
+                  prevWhiteBalance, defaultWhiteBalance);
             }
           }
 
@@ -1098,7 +1101,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
         mListViewColorEffects.setItemChecked(mSupportedColorEffectsList.indexOf(lastColorEffect), true);
       }
     }
-    isVideoCameraMode = prefs.getBoolean(Prefs.PREF_VIDEO_CAMERA_MODE, false);
+    isVideoCameraMode = prefs.getBoolean(Prefs.PREF_IS_VIDEO_CAMERA_MODE, false);
     mCamera.setParameters(p);
     restorePictureAndVideoSize();
     restoreFlashMode();
@@ -1195,8 +1198,8 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
     } else {
       editor.putString(Prefs.PREF_LAST_CAPTURED_FILE_PATH, null);
     }
-    editor.putBoolean(Prefs.PREF_VIDEO_CAMERA_MODE, isVideoCameraMode);
-    editor.putBoolean(Prefs.PREF_BACK_CAMERA, isFacingBackCamera);
+    editor.putBoolean(Prefs.PREF_IS_VIDEO_CAMERA_MODE, isVideoCameraMode);
+    editor.putBoolean(Prefs.PREF_IS_FACING_BACK_CAMERA, isFacingBackCamera);
     editor.commit();
     savePictureAndVideoSize();
     saveFlashMode();
@@ -1297,17 +1300,17 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
   private void restorePreferences() {
     final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
     try {
-      periodicCaptureInterval = 1000 * Integer
+      periodicCaptureInterval = ONE_SECOND_IN_MILLIS * Integer
           .parseInt(settings.getString(Prefs.PREF_PERIODIC_CAPTURE_INTERVAL, "2"));
     } catch(Exception e) {
-      periodicCaptureInterval = 2000;
+      periodicCaptureInterval = TWO_SECONDS_IN_MILLIS;
     }
 
     try {
-      delayAfterCapture = 1000 * Integer.parseInt(settings
+      delayAfterCapture = ONE_SECOND_IN_MILLIS * Integer.parseInt(settings
           .getString(Prefs.PREF_DELAY_AFTER_CAPTURE, "1"));
     } catch(Exception e) {
-      delayAfterCapture = 1000;
+      delayAfterCapture = ONE_SECOND_IN_MILLIS;
     }
 
     final String shutter = settings.getString(Prefs.PREF_SHUTTER_SOUND, "enabled");
@@ -1410,7 +1413,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
 
   private void initCameraAndPreview() {
     final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-    isFacingBackCamera = prefs.getBoolean(Prefs.PREF_BACK_CAMERA, true);
+    isFacingBackCamera = prefs.getBoolean(Prefs.PREF_IS_FACING_BACK_CAMERA, true);
     if(isFacingBackCamera) {
       mCamera = getCameraInstance(Camera.CameraInfo.CAMERA_FACING_BACK);
     } else {
