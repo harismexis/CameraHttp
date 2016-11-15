@@ -25,7 +25,7 @@ public class Prefs {
 
   public static final String PREF_PERIODIC_CAPTURE_INTERVAL = "periodic_capture_interval";
   public static final String PREF_DELAY_AFTER_CAPTURE = "delay_after_capture";
-  
+
   public static final String PREF_ZOOM = "zoom";
   public static final String PREF_EXPOSURE_COMPENSATION = "exposure_compensation";
   public static final String PREF_SCENE_MODE = "scene_mode";
