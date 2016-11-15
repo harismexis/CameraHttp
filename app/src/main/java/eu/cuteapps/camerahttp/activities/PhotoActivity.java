@@ -91,7 +91,7 @@ import eu.cuteapps.camerahttp.constants.TextConstants;
 import eu.cuteapps.camerahttp.mycamerapreview.CameraPreview;
 import eu.cuteapps.camerahttp.R;
 import eu.cuteapps.camerahttp.constants.Actions;
-import eu.cuteapps.camerahttp.constants.Constants;
+import eu.cuteapps.camerahttp.constants.CameraConstants;
 import eu.cuteapps.camerahttp.constants.GalleryFileTypes;
 import eu.cuteapps.camerahttp.constants.HttpParams;
 import eu.cuteapps.camerahttp.constants.Prefs;
@@ -110,7 +110,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
   private static final int ONE_SECOND_IN_MILLIS = 1000;
   private static final int TWO_SECONDS_IN_MILLIS = 2000;
 
-  private int videoCameraFlashMode = Constants.VIDEO_CAMERA_FLASH_MODE_OFF;
+  private int videoCameraFlashMode = CameraConstants.VIDEO_CAMERA_FLASH_MODE_OFF;
 
   private int periodicCaptureInterval;
 
@@ -377,7 +377,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
           removeSettingsViews();
           CamcorderProfile camcorderProfile;
           try {
-            if(isFacingBackCamera && videoCameraFlashMode == Constants.VIDEO_CAMERA_FLASH_MODE_ON) {
+            if(isFacingBackCamera && videoCameraFlashMode == CameraConstants.VIDEO_CAMERA_FLASH_MODE_ON) {
               mCamera.stopPreview();
               Parameters params = mCamera.getParameters();
               params.setFlashMode(Parameters.FLASH_MODE_TORCH);
@@ -535,7 +535,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
   private void restoreFlashMode() {
     final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
     videoCameraFlashMode = settings.getInt(Prefs.PREF_VIDEO_CAMERA_FLASH_MODE,
-        Constants.VIDEO_CAMERA_FLASH_MODE_OFF);
+        CameraConstants.VIDEO_CAMERA_FLASH_MODE_OFF);
     if(!isVideoCameraMode && isFlashModeSupported) {
       Parameters params = mCamera.getParameters();
       params.setFlashMode(settings.getString(Prefs.PREF_PHOTO_CAMERA_FLASH_MODE,
@@ -1955,7 +1955,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       if(isFlashModeONSupported) {
         menuItemFlashOn.setEnabled(true);
         if(isVideoCameraMode) {
-          if(videoCameraFlashMode == Constants.VIDEO_CAMERA_FLASH_MODE_ON) {
+          if(videoCameraFlashMode == CameraConstants.VIDEO_CAMERA_FLASH_MODE_ON) {
             menuItemFlashOn.setChecked(true);
           }
         } else {
@@ -1971,7 +1971,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       if(isFlashModeOFFSupported) {
         menuItemFlashOff.setEnabled(true);
         if(isVideoCameraMode) {
-          if(videoCameraFlashMode == Constants.VIDEO_CAMERA_FLASH_MODE_OFF) {
+          if(videoCameraFlashMode == CameraConstants.VIDEO_CAMERA_FLASH_MODE_OFF) {
             menuItemFlashOff.setChecked(true);
           }
         } else {
@@ -2227,7 +2227,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       case R.id.camera_menu_flash_on:
         item.setChecked(true);
         if(isVideoCameraMode) {
-          videoCameraFlashMode = Constants.VIDEO_CAMERA_FLASH_MODE_ON;
+          videoCameraFlashMode = CameraConstants.VIDEO_CAMERA_FLASH_MODE_ON;
         } else {
           Parameters par = mCamera.getParameters();
           if(par.getFlashMode().equals(Parameters.FLASH_MODE_ON)) {
@@ -2243,7 +2243,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       case R.id.camera_menu_flash_off:
         item.setChecked(true);
         if(isVideoCameraMode) {
-          videoCameraFlashMode = Constants.VIDEO_CAMERA_FLASH_MODE_OFF;
+          videoCameraFlashMode = CameraConstants.VIDEO_CAMERA_FLASH_MODE_OFF;
         } else {
           Parameters parameters = mCamera.getParameters();
           if(parameters.getFlashMode().equals(Parameters.FLASH_MODE_OFF)) {
