@@ -32,37 +32,22 @@ public class MySQLiteCapturesDataSource {
     dbHelper.close();
   }
 
-  public boolean addCaptureToDatabase(
-      String latitude, String longitude, String mediaType, String filePath) {
-    try {
-      ContentValues values = new ContentValues();
-      values.put(MySQLiteCapturesHelper.COLUMN_LATITUDE, latitude);
-      values.put(MySQLiteCapturesHelper.COLUMN_LONGITUDE, longitude);
-      values.put(MySQLiteCapturesHelper.COLUMN_MEDIA_TYPE, mediaType);
-      values.put(MySQLiteCapturesHelper.COLUMN_MEDIA_FILE_PATH, filePath);
-      database.insert(MySQLiteCapturesHelper.TABLE_CAPTURES, null, values);
-    } catch(Exception e) {
-      return false;
-    }
-    return true;
+  public void addCaptureToDatabase(String latitude, String longitude, String mediaType, String filePath) {
+    final ContentValues values = new ContentValues();
+    values.put(MySQLiteCapturesHelper.COLUMN_LATITUDE, latitude);
+    values.put(MySQLiteCapturesHelper.COLUMN_LONGITUDE, longitude);
+    values.put(MySQLiteCapturesHelper.COLUMN_MEDIA_TYPE, mediaType);
+    values.put(MySQLiteCapturesHelper.COLUMN_MEDIA_FILE_PATH, filePath);
+    database.insert(MySQLiteCapturesHelper.TABLE_CAPTURES, null, values);
   }
 
-  public boolean deleteCaptureById(String id) {
-    try {
-      database.delete(MySQLiteCapturesHelper.TABLE_CAPTURES, MySQLiteCapturesHelper.COLUMN_ID + "=" + id, null);
-    } catch(Exception e) {
-      return false;
-    }
-    return true;
+  public void deleteCaptureById(String id) {
+    database.delete(MySQLiteCapturesHelper.TABLE_CAPTURES,
+        MySQLiteCapturesHelper.COLUMN_ID + "=" + id, null);
   }
 
-  public boolean deleteAllCaptures() {
-    try {
-      database.delete(MySQLiteCapturesHelper.TABLE_CAPTURES, null, null);
-    } catch(Exception e) {
-      return false;
-    }
-    return true;
+  public void deleteAllCaptures() {
+    database.delete(MySQLiteCapturesHelper.TABLE_CAPTURES, null, null);
   }
 
   public ArrayList<Capture> getAllModels() {
@@ -70,8 +55,9 @@ public class MySQLiteCapturesDataSource {
     final Cursor cursor = database.query(MySQLiteCapturesHelper.TABLE_CAPTURES,
         allColumns, null, null, null, null, null);
     cursor.moveToFirst();
+    Capture model;
     while(!cursor.isAfterLast()) {
-      Capture model = cursorToModel(cursor);
+      model = cursorToModel(cursor);
       models.add(model);
       cursor.moveToNext();
     }
@@ -79,7 +65,7 @@ public class MySQLiteCapturesDataSource {
     return models;
   }
 
-  public Capture cursorToModel(Cursor cursor) {
+  private Capture cursorToModel(Cursor cursor) {
     return new Capture(cursor.getString(0), cursor.getString(1), cursor.getString(2),
         cursor.getString(3), cursor.getString(4));
   }

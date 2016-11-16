@@ -98,6 +98,7 @@ import eu.cuteapps.camerahttp.constants.Prefs;
 import eu.cuteapps.camerahttp.myadapters.CapturesAdapter;
 import eu.cuteapps.camerahttp.mysqlite.Capture;
 import eu.cuteapps.camerahttp.mysqlite.MySQLiteCapturesDataSource;
+import eu.cuteapps.camerahttp.myutils.LogUtils;
 import eu.cuteapps.camerahttp.myutils.ViewUtils;
 import eu.cuteapps.camerahttp.myutils.LocationUtils;
 import eu.cuteapps.camerahttp.myutils.MyFileUtils;
@@ -106,6 +107,8 @@ import eu.cuteapps.camerahttp.myutils.NetUtils;
 
 public class PhotoActivity extends AppCompatActivity implements ConnectionCallbacks,
     OnConnectionFailedListener, LocationListener {
+
+  private static final String TAG = "PhotoActivity";
 
   private static final int ONE_SECOND_IN_MILLIS = 1000;
   private static final int TWO_SECONDS_IN_MILLIS = 2000;
@@ -1524,16 +1527,18 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       /* Store Capture to database */
       final SharedPreferences settings = PreferenceManager
           .getDefaultSharedPreferences(PhotoActivity.this);
-      if(settings.getString(Prefs.PREF_STORE_CAPTURES_TO_DB, "yes").equals("yes")) {
-        boolean captureSavedSuccessfully = datasource.addCaptureToDatabase(
-            LocationUtils.getStringLatitude(mLastLocation),
-            LocationUtils.getStringLongitude(mLastLocation),
-            Capture.CAPTURE_TYPE_IMAGE,
-            lastCapturedMediaFile.getAbsolutePath());
 
-        if(captureSavedSuccessfully) {
+      if(settings.getString(Prefs.PREF_STORE_CAPTURES_TO_DB, "yes").equals("yes")) {
+        try {
+          datasource.addCaptureToDatabase(
+              LocationUtils.getStringLatitude(mLastLocation),
+              LocationUtils.getStringLongitude(mLastLocation),
+              Capture.CAPTURE_TYPE_IMAGE,
+              lastCapturedMediaFile.getAbsolutePath());
           allCaptures.clear();
           allCaptures.addAll(datasource.getAllModels());
+        } catch(Exception e) {
+          LogUtils.log(TAG, e.getMessage());
         }
       }
       return null;
@@ -1756,35 +1761,32 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
     alertDialog.show();
   }
 
-  private class SaveCaptureTask extends AsyncTask<String, Void, Boolean> {
+  private class SaveCaptureTask extends AsyncTask<String, Void, Void> {
     @Override
-    protected Boolean doInBackground(String... params) {
+    protected Void doInBackground(String... params) {
       final SharedPreferences settings = PreferenceManager
           .getDefaultSharedPreferences(PhotoActivity.this);
 
       if(settings.getString(Prefs.PREF_STORE_CAPTURES_TO_DB, "yes").equals("yes")) {
-        boolean captureSavedSuccessfully = datasource.addCaptureToDatabase(
-            LocationUtils.getStringLatitude(mLastLocation),
-            LocationUtils.getStringLongitude(mLastLocation),
-            params[0],
-            lastCapturedMediaFile.getAbsolutePath());
-
-        if(captureSavedSuccessfully) {
+        try {
+          datasource.addCaptureToDatabase(
+              LocationUtils.getStringLatitude(mLastLocation),
+              LocationUtils.getStringLongitude(mLastLocation),
+              params[0],
+              lastCapturedMediaFile.getAbsolutePath());
           allCaptures.clear();
           allCaptures.addAll(datasource.getAllModels());
+        } catch(Exception e) {
+          LogUtils.log(TAG, e.getMessage());
         }
-        return true;
       }
-      return false;
+      return null;
     }
 
     @Override
-    protected void onPostExecute(Boolean result) {
+    protected void onPostExecute(Void result) {
       if(capturesAdapter != null) {
         capturesAdapter.notifyDataSetChanged();
-      }
-      if(!result) {
-        Toast.makeText(PhotoActivity.this, R.string.error_saving_capture, Toast.LENGTH_SHORT).show();
       }
     }
   }
