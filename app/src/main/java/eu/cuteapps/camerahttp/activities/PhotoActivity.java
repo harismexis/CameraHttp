@@ -532,7 +532,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
     } else {
       editor.putString(Prefs.PREF_PHOTO_CAMERA_FLASH_MODE, mCamera.getParameters().getFlashMode());
     }
-    editor.commit();
+    editor.apply();
   }
 
   private void restoreFlashMode() {
@@ -1201,7 +1201,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
     }
     editor.putBoolean(Prefs.PREF_IS_VIDEO_CAMERA_MODE, isVideoCameraMode);
     editor.putBoolean(Prefs.PREF_IS_FACING_BACK_CAMERA, isFacingBackCamera);
-    editor.commit();
+    editor.apply();
     savePictureAndVideoSize();
     saveFlashMode();
   }
@@ -1227,7 +1227,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
         editor.putInt(Prefs.PREF_FRONT_CAMERA_VIDEO_SIZE_HEIGHT, selectedVideoSize.height);
       }
     }
-    editor.commit();
+    editor.apply();
   }
 
   private void resetCameraSettingsAndSettingsViews() {
@@ -1454,7 +1454,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
         final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = settings.edit();
         editor.putString(Prefs.PREF_PHOTO_CAMERA_FLASH_MODE, mCamera.getParameters().getFlashMode());
-        editor.commit();
+        editor.apply();
       }
       savePictureAndVideoSize();
       closeCameraAndPreview();
