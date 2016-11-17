@@ -410,11 +410,16 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
 
             lastCapturedMediaFile = MyFileUtils.getOutputMediaFile(MyFileUtils.MEDIA_TYPE_VIDEO,
                 GalleryFileTypes.MEDIA_FOLDER_NAME);
-            mMediaRecorder.setOutputFile(lastCapturedMediaFile.toString());
 
-            /* Add video to gallery */
-            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
-                Uri.fromFile(lastCapturedMediaFile)));
+            if(lastCapturedMediaFile != null) {
+              mMediaRecorder.setOutputFile(lastCapturedMediaFile.toString());
+              sendBroadcast(new Intent( /* Add video to gallery */
+                  Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
+                  Uri.fromFile(lastCapturedMediaFile)));
+            } else {
+              Toast.makeText(PhotoActivity.this,
+                  getString(R.string.error_creating_video_file), Toast.LENGTH_SHORT).show();
+            }
 
             mMediaRecorder.setPreviewDisplay(mPreview.getHolder().getSurface());
             mMediaRecorder.prepare();
@@ -1525,9 +1530,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       }
 
       /* Store Capture to database */
-      final SharedPreferences settings = PreferenceManager
-          .getDefaultSharedPreferences(PhotoActivity.this);
-
+      final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(PhotoActivity.this);
       if(settings.getString(Prefs.PREF_STORE_CAPTURES_TO_DB, "yes").equals("yes")) {
         try {
           datasource.addCaptureToDatabase(
@@ -1769,7 +1772,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
     protected Void doInBackground(String... params) {
       final SharedPreferences settings = PreferenceManager
           .getDefaultSharedPreferences(PhotoActivity.this);
-
       if(settings.getString(Prefs.PREF_STORE_CAPTURES_TO_DB, "yes").equals("yes")) {
         try {
           datasource.addCaptureToDatabase(
@@ -1853,7 +1855,12 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       mMediaRecorder.setAudioEncoder(AudioEncoder.AMR_NB);
       lastCapturedMediaFile = MyFileUtils.getOutputMediaFile(MyFileUtils.MEDIA_TYPE_AUDIO,
           GalleryFileTypes.MEDIA_FOLDER_NAME);
-      mMediaRecorder.setOutputFile(lastCapturedMediaFile.getAbsolutePath());
+      if(lastCapturedMediaFile != null) {
+        mMediaRecorder.setOutputFile(lastCapturedMediaFile.getAbsolutePath());
+      } else {
+        Toast.makeText(this, getString(R.string.error_creating_audio_file),
+            Toast.LENGTH_SHORT).show();
+      }
       mMediaRecorder.prepare();
       mMediaRecorder.start();
     } catch(Exception e) {
