@@ -111,11 +111,10 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
   private static final String TAG = "PhotoActivity";
 
   private static final int ONE_SECOND_IN_MILLIS = 1000;
-  private static final int TWO_SECONDS_IN_MILLIS = 2000;
+  private static final int DEFAULT_CAPTURE_INTERVAL_IN_SEC = 2;
+  private int captureIntervalInSec;
 
   private int videoCameraFlashMode = CameraConstants.VIDEO_CAMERA_FLASH_MODE_OFF;
-
-  private int periodicCaptureInterval;
 
   private SendCaptureViaHttpTask sendCaptureViaHttpTask;
   private ProgressDialog sendCaptureViaHttpProgressDialog;
@@ -1300,11 +1299,12 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
 
   private void restorePreferences() {
     final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+    final String captureIntervalToString = settings.getString(Prefs.PREF_PERIODIC_CAPTURE_INTERVAL,
+        String.valueOf(DEFAULT_CAPTURE_INTERVAL_IN_SEC));
     try {
-      periodicCaptureInterval = ONE_SECOND_IN_MILLIS * Integer
-          .parseInt(settings.getString(Prefs.PREF_PERIODIC_CAPTURE_INTERVAL, "2"));
+      captureIntervalInSec = Integer.parseInt(captureIntervalToString);
     } catch(Exception e) {
-      periodicCaptureInterval = TWO_SECONDS_IN_MILLIS;
+      captureIntervalInSec = DEFAULT_CAPTURE_INTERVAL_IN_SEC;
     }
 
     try {
@@ -1569,7 +1569,8 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
         }
 
         /* Set next capture */
-        alarmManager.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + periodicCaptureInterval,
+        alarmManager.set(AlarmManager.RTC_WAKEUP,
+            System.currentTimeMillis() + captureIntervalInSec * ONE_SECOND_IN_MILLIS,
             periodicCapturePendingIntent);
       }
     }
@@ -1706,7 +1707,9 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
     infinitePeriodicCapture = isInfinite;
     isPeriodicCaptureOn = true;
     periodicCaptureButton.setImageResource(R.mipmap.stop);
-    Toast.makeText(this, "Periodic capture started, interval: " + periodicCaptureInterval,
+    Toast.makeText(this,
+        getString(R.string.periodic_capture_started_with_interval,
+            String.valueOf(captureIntervalInSec)),
         Toast.LENGTH_SHORT).show();
     capturePhoto();
   }
@@ -1719,7 +1722,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
 
   private void showAlertDialogForPeriodicCapture() {
     final AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
-    alertDialog.setMessage("- Enter number of captures\n- Leave empty for continous capture");
+    alertDialog.setMessage(getString(R.string.enter_number_of_captures_or_empty_for_continuous_capture));
     final EditText input = new EditText(this);
     input.setInputType(InputType.TYPE_CLASS_NUMBER);
     LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
