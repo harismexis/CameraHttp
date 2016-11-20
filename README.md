@@ -1,4 +1,4 @@
-# CameraHttp
+## CameraHttp
 
 An Android camera application which supports the most common functionalities of a camera, such as
 photo capture, repeated photo capture, video capture, flash, effects, zoom, exposure compensation and
