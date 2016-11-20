@@ -16,6 +16,7 @@ public class MySQLiteCapturesDataSource {
       MySQLiteCapturesHelper.COLUMN_ID,
       MySQLiteCapturesHelper.COLUMN_LATITUDE,
       MySQLiteCapturesHelper.COLUMN_LONGITUDE,
+      MySQLiteCapturesHelper.COLUMN_DATE,
       MySQLiteCapturesHelper.COLUMN_MEDIA_TYPE,
       MySQLiteCapturesHelper.COLUMN_MEDIA_FILE_PATH
   };
@@ -32,10 +33,12 @@ public class MySQLiteCapturesDataSource {
     dbHelper.close();
   }
 
-  public void addCaptureToDatabase(String latitude, String longitude, String mediaType, String filePath) {
+  public void addCaptureToDatabase(String latitude, String longitude, String date,
+                                   String mediaType, String filePath) {
     final ContentValues values = new ContentValues();
     values.put(MySQLiteCapturesHelper.COLUMN_LATITUDE, latitude);
     values.put(MySQLiteCapturesHelper.COLUMN_LONGITUDE, longitude);
+    values.put(MySQLiteCapturesHelper.COLUMN_DATE, date);
     values.put(MySQLiteCapturesHelper.COLUMN_MEDIA_TYPE, mediaType);
     values.put(MySQLiteCapturesHelper.COLUMN_MEDIA_FILE_PATH, filePath);
     database.insert(MySQLiteCapturesHelper.TABLE_CAPTURES, null, values);
@@ -67,6 +70,6 @@ public class MySQLiteCapturesDataSource {
 
   private Capture cursorToModel(Cursor cursor) {
     return new Capture(cursor.getString(0), cursor.getString(1), cursor.getString(2),
-        cursor.getString(3), cursor.getString(4));
+        cursor.getString(3), cursor.getString(4), cursor.getString(5));
   }
 }

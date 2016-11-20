@@ -98,6 +98,7 @@ import eu.cuteapps.camerahttp.constants.Prefs;
 import eu.cuteapps.camerahttp.myadapters.CapturesAdapter;
 import eu.cuteapps.camerahttp.mysqlite.Capture;
 import eu.cuteapps.camerahttp.mysqlite.MySQLiteCapturesDataSource;
+import eu.cuteapps.camerahttp.myutils.DateUtil;
 import eu.cuteapps.camerahttp.myutils.LogUtils;
 import eu.cuteapps.camerahttp.myutils.ViewUtils;
 import eu.cuteapps.camerahttp.myutils.LocationUtils;
@@ -1536,6 +1537,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
           datasource.addCaptureToDatabase(
               LocationUtils.getStringLatitude(mLastLocation),
               LocationUtils.getStringLongitude(mLastLocation),
+              DateUtil.getCurrentDateTime(),
               Capture.CAPTURE_TYPE_IMAGE,
               lastCapturedMediaFile.getAbsolutePath());
           allCaptures.clear();
@@ -1777,6 +1779,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
           datasource.addCaptureToDatabase(
               LocationUtils.getStringLatitude(mLastLocation),
               LocationUtils.getStringLongitude(mLastLocation),
+              DateUtil.getCurrentDateTime(),
               params[0],
               lastCapturedMediaFile.getAbsolutePath());
           allCaptures.clear();
@@ -2084,7 +2087,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
 
       case R.id.context_places_delete:
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
-        alertDialog.setMessage(getString(R.string.delete_selected_place));
+        alertDialog.setMessage(getString(R.string.delete_selected_capture));
         alertDialog.setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
           public void onClick(DialogInterface dialog, int which) {
             try {
@@ -2095,10 +2098,10 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
               if(allCaptures.size() <= 0) {
                 frameLayout.removeView(mListViewCaptures);
               }
-              Toast.makeText(PhotoActivity.this, getString(R.string.place_deleted),
+              Toast.makeText(PhotoActivity.this, getString(R.string.capture_deleted),
                   Toast.LENGTH_SHORT).show();
             } catch(Exception e) {
-              Toast.makeText(PhotoActivity.this, getString(R.string.error_deleting_place),
+              Toast.makeText(PhotoActivity.this, getString(R.string.error_deleting_capture),
                   Toast.LENGTH_SHORT).show();
             }
           }
@@ -2113,7 +2116,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
 
       case R.id.context_places_delete_all:
         AlertDialog.Builder alertDialogDeleteAll = new AlertDialog.Builder(this);
-        alertDialogDeleteAll.setMessage(getString(R.string.delete_all_places));
+        alertDialogDeleteAll.setMessage(getString(R.string.delete_all_captures));
         alertDialogDeleteAll.setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
           public void onClick(DialogInterface dialog, int which) {
             try {
@@ -2121,10 +2124,10 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
               datasource.deleteAllCaptures();
               capturesAdapter.notifyDataSetChanged();
               frameLayout.removeView(mListViewCaptures);
-              Toast.makeText(PhotoActivity.this, getString(R.string.all_places_deleted),
+              Toast.makeText(PhotoActivity.this, getString(R.string.all_captures_deleted),
                   Toast.LENGTH_SHORT).show();
             } catch(Exception e) {
-              Toast.makeText(PhotoActivity.this, getString(R.string.error_deleting_places),
+              Toast.makeText(PhotoActivity.this, getString(R.string.error_deleting_captures),
                   Toast.LENGTH_SHORT).show();
             }
           }
@@ -2156,7 +2159,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
 
       case R.id.camera_menu_all_captures:
         if(allCaptures == null || allCaptures.size() <= 0) {
-          Toast.makeText(this, getString(R.string.no_places), Toast.LENGTH_SHORT).show();
+          Toast.makeText(this, getString(R.string.no_captures), Toast.LENGTH_SHORT).show();
           return true;
         }
         if(frameLayout.findViewById(R.id.captures_list_view) != null) {
