@@ -37,7 +37,8 @@ public class MySQLiteCapturesHelper extends SQLiteOpenHelper {
   @Override
   public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
     Log.w(MySQLiteCapturesHelper.class.getName(),
-        "Upgrading database from version " + oldVersion + " to " + newVersion + ", which will destroy all old data");
+        "Upgrading database from version " + oldVersion + " to " + newVersion +
+            ", which will destroy all old data");
     db.execSQL("DROP TABLE IF EXISTS " + MySQLiteCapturesHelper.TABLE_CAPTURES);
     this.onCreate(db);
   }
