@@ -85,4 +85,6 @@
     <string name="scene_mode_changed_from_to" formatted="false">Scene mode changed from %s to %s</string>
     <string name="periodic_capture_started_with_interval">Periodic capture started, interval: %s sec</string>
     <string name="enter_number_of_captures_or_empty_for_continuous_capture">Enter number of captures. Leave empty for continuous capture</string>
+    <string name="error_creating_video_file">Error creating video file</string>
+    <string name="error_creating_audio_file">Error creating audio file</string>
 </resources>
