@@ -10,6 +10,10 @@
         android:title="@string/show_on_map"/>
 
     <item
+        android:id="@+id/context_places_open"
+        android:title="@string/open_in_gallery"/>
+
+    <item
         android:id="@+id/context_places_delete"
         android:title="@string/delete"/>
 

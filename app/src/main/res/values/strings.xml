@@ -78,6 +78,7 @@
     <string name="hide">Hide</string>
     <string name="preferences">Preferences</string>
     <string name="show_on_map">Show on map</string>
+    <string name="open_in_gallery">Open in Gallery</string>
     <string name="delete">Delete</string>
     <string name="delete_all">Delete all</string>
     <string name="white_balance_changed_from_to" formatted="false">White balance changed from %s to %s</string>
