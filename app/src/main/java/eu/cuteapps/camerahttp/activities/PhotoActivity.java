@@ -452,32 +452,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
           return;
         }
         openMediaInGallery(lastCapturedMediaFile);
-//        if(isPreviewBusy()) {
-//          Toast.makeText(PhotoActivity.this, R.string.camera_is_busy, Toast.LENGTH_SHORT).show();
-//          return;
-//        }
-//        final Intent intent = new Intent(Intent.ACTION_VIEW);
-//        if(MyFileUtils.fileIsImage(lastCapturedMediaFile.getName())) {
-//          intent.setDataAndType(Uri.fromFile(lastCapturedMediaFile), GalleryFileTypes.TYPE_IMAGE);
-//
-//        } else if(MyFileUtils.fileIsVideo(lastCapturedMediaFile.getName())) {
-//          intent.setDataAndType(Uri.fromFile(lastCapturedMediaFile), GalleryFileTypes.TYPE_VIDEO);
-//
-//        } else if(lastCapturedMediaFile.getName().endsWith(".3gp")) {
-//          intent.setDataAndType(Uri.fromFile(lastCapturedMediaFile), GalleryFileTypes.TYPE_AUDIO);
-//
-//        } else {
-//          Toast.makeText(PhotoActivity.this, R.string.unknown_file_type,
-//              Toast.LENGTH_SHORT).show();
-//          return;
-//        }
-//
-//        if(intent.resolveActivity(PhotoActivity.this.getPackageManager()) == null) {
-//          Toast.makeText(PhotoActivity.this, R.string.unable_to_complete_this_action,
-//              Toast.LENGTH_SHORT).show();
-//          return;
-//        }
-//        startActivity(intent);
       }
     });
 
