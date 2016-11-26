@@ -98,6 +98,7 @@ import eu.cuteapps.camerahttp.constants.Prefs;
 import eu.cuteapps.camerahttp.myadapters.CapturesAdapter;
 import eu.cuteapps.camerahttp.mysqlite.Capture;
 import eu.cuteapps.camerahttp.mysqlite.MySQLiteCapturesDataSource;
+import eu.cuteapps.camerahttp.myutils.DateUtil;
 import eu.cuteapps.camerahttp.myutils.LogUtils;
 import eu.cuteapps.camerahttp.myutils.ViewUtils;
 import eu.cuteapps.camerahttp.myutils.LocationUtils;
@@ -221,7 +222,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
   private ListView mListViewCaptures;
   private MySQLiteCapturesDataSource datasource;
   private ArrayList<Capture> allCaptures;
-  private Capture selectedPlace;
+  private Capture selectedCapture;
   private CapturesAdapter capturesAdapter;
 
   private boolean restoreCameraEffectsInOnResume = false;
@@ -450,34 +451,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
               Toast.LENGTH_SHORT).show();
           return;
         }
-
-        if(isPreviewBusy()) {
-          Toast.makeText(PhotoActivity.this, R.string.camera_is_busy, Toast.LENGTH_SHORT).show();
-          return;
-        }
-
-        final Intent intent = new Intent(Intent.ACTION_VIEW);
-        if(MyFileUtils.fileIsImage(lastCapturedMediaFile.getName())) {
-          intent.setDataAndType(Uri.fromFile(lastCapturedMediaFile), GalleryFileTypes.TYPE_IMAGE);
-
-        } else if(MyFileUtils.fileIsVideo(lastCapturedMediaFile.getName())) {
-          intent.setDataAndType(Uri.fromFile(lastCapturedMediaFile), GalleryFileTypes.TYPE_VIDEO);
-
-        } else if(lastCapturedMediaFile.getName().endsWith(".3gp")) {
-          intent.setDataAndType(Uri.fromFile(lastCapturedMediaFile), GalleryFileTypes.TYPE_AUDIO);
-
-        } else {
-          Toast.makeText(PhotoActivity.this, R.string.unknown_file_type,
-              Toast.LENGTH_SHORT).show();
-          return;
-        }
-
-        if(intent.resolveActivity(PhotoActivity.this.getPackageManager()) == null) {
-          Toast.makeText(PhotoActivity.this, R.string.unable_to_complete_this_action,
-              Toast.LENGTH_SHORT).show();
-          return;
-        }
-        startActivity(intent);
+        openMediaInGallery(lastCapturedMediaFile);
       }
     });
 
@@ -523,6 +497,34 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       periodicCaptureButton.setVisibility(View.GONE);
       videoButton.setVisibility(View.VISIBLE);
     }
+  }
+
+  private void openMediaInGallery(File mediaFile) {
+    if(isPreviewBusy()) {
+      Toast.makeText(PhotoActivity.this, R.string.camera_is_busy, Toast.LENGTH_SHORT).show();
+      return;
+    }
+    final Intent intent = new Intent(Intent.ACTION_VIEW);
+    if(MyFileUtils.fileIsImage(mediaFile.getName())) {
+      intent.setDataAndType(Uri.fromFile(mediaFile), GalleryFileTypes.TYPE_IMAGE);
+
+    } else if(MyFileUtils.fileIsVideo(mediaFile.getName())) {
+      intent.setDataAndType(Uri.fromFile(mediaFile), GalleryFileTypes.TYPE_VIDEO);
+
+    } else if(MyFileUtils.fileIsAudio(mediaFile.getName())) {
+      intent.setDataAndType(Uri.fromFile(mediaFile), GalleryFileTypes.TYPE_AUDIO);
+
+    } else {
+      Toast.makeText(PhotoActivity.this, R.string.unknown_file_type, Toast.LENGTH_SHORT).show();
+      return;
+    }
+
+    if(intent.resolveActivity(getPackageManager()) == null) {
+      Toast.makeText(PhotoActivity.this, R.string.unable_to_complete_this_action,
+          Toast.LENGTH_SHORT).show();
+      return;
+    }
+    startActivity(intent);
   }
 
   private void saveFlashMode() {
@@ -1536,6 +1538,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
           datasource.addCaptureToDatabase(
               LocationUtils.getStringLatitude(mLastLocation),
               LocationUtils.getStringLongitude(mLastLocation),
+              DateUtil.getCurrentDateTime(),
               Capture.CAPTURE_TYPE_IMAGE,
               lastCapturedMediaFile.getAbsolutePath());
           allCaptures.clear();
@@ -1777,6 +1780,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
           datasource.addCaptureToDatabase(
               LocationUtils.getStringLatitude(mLastLocation),
               LocationUtils.getStringLongitude(mLastLocation),
+              DateUtil.getCurrentDateTime(),
               params[0],
               lastCapturedMediaFile.getAbsolutePath());
           allCaptures.clear();
@@ -2047,8 +2051,8 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
   @Override
   public boolean onContextItemSelected(MenuItem item) {
     final AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
-    selectedPlace = allCaptures.get(info.position);
-    if(selectedPlace == null) {
+    selectedCapture = allCaptures.get(info.position);
+    if(selectedCapture == null) {
       return false;
     }
     switch(item.getItemId()) {
@@ -2064,8 +2068,8 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       case R.id.context_places_map:
         String uri = null;
         try {
-          final float lat = Float.parseFloat(selectedPlace.getLatitude());
-          final float lon = Float.parseFloat(selectedPlace.getLongitude());
+          final float lat = Float.parseFloat(selectedCapture.getLatitude());
+          final float lon = Float.parseFloat(selectedCapture.getLongitude());
           uri = String.format(Locale.ENGLISH, "geo:%f,%f", lat, lon);
         } catch(Exception e) {
           Toast.makeText(PhotoActivity.this, R.string.unknown_location, Toast.LENGTH_SHORT).show();
@@ -2079,26 +2083,33 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
           Toast.makeText(PhotoActivity.this, R.string.unable_to_complete_this_action,
               Toast.LENGTH_SHORT).show();
         }
+        return true;
 
+      case R.id.context_places_open:
+        if(selectedCapture.getMediaFilePath() == null) {
+          Toast.makeText(this, R.string.no_captured_media_file_found, Toast.LENGTH_SHORT);
+          return false;
+        }
+        openMediaInGallery(new File(selectedCapture.getMediaFilePath()));
         return true;
 
       case R.id.context_places_delete:
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
-        alertDialog.setMessage(getString(R.string.delete_selected_place));
+        alertDialog.setMessage(getString(R.string.delete_selected_capture));
         alertDialog.setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
           public void onClick(DialogInterface dialog, int which) {
             try {
-              final int indexOfSelectedLinkToDelete = allCaptures.indexOf(selectedPlace);
+              final int indexOfSelectedLinkToDelete = allCaptures.indexOf(selectedCapture);
               allCaptures.remove(indexOfSelectedLinkToDelete);
-              datasource.deleteCaptureById(selectedPlace.getId());
+              datasource.deleteCaptureById(selectedCapture.getId());
               capturesAdapter.notifyDataSetChanged();
               if(allCaptures.size() <= 0) {
                 frameLayout.removeView(mListViewCaptures);
               }
-              Toast.makeText(PhotoActivity.this, getString(R.string.place_deleted),
+              Toast.makeText(PhotoActivity.this, getString(R.string.capture_deleted),
                   Toast.LENGTH_SHORT).show();
             } catch(Exception e) {
-              Toast.makeText(PhotoActivity.this, getString(R.string.error_deleting_place),
+              Toast.makeText(PhotoActivity.this, getString(R.string.error_deleting_capture),
                   Toast.LENGTH_SHORT).show();
             }
           }
@@ -2113,7 +2124,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
 
       case R.id.context_places_delete_all:
         AlertDialog.Builder alertDialogDeleteAll = new AlertDialog.Builder(this);
-        alertDialogDeleteAll.setMessage(getString(R.string.delete_all_places));
+        alertDialogDeleteAll.setMessage(getString(R.string.delete_all_captures));
         alertDialogDeleteAll.setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
           public void onClick(DialogInterface dialog, int which) {
             try {
@@ -2121,10 +2132,10 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
               datasource.deleteAllCaptures();
               capturesAdapter.notifyDataSetChanged();
               frameLayout.removeView(mListViewCaptures);
-              Toast.makeText(PhotoActivity.this, getString(R.string.all_places_deleted),
+              Toast.makeText(PhotoActivity.this, getString(R.string.all_captures_deleted),
                   Toast.LENGTH_SHORT).show();
             } catch(Exception e) {
-              Toast.makeText(PhotoActivity.this, getString(R.string.error_deleting_places),
+              Toast.makeText(PhotoActivity.this, getString(R.string.error_deleting_captures),
                   Toast.LENGTH_SHORT).show();
             }
           }
@@ -2156,7 +2167,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
 
       case R.id.camera_menu_all_captures:
         if(allCaptures == null || allCaptures.size() <= 0) {
-          Toast.makeText(this, getString(R.string.no_places), Toast.LENGTH_SHORT).show();
+          Toast.makeText(this, getString(R.string.no_captures), Toast.LENGTH_SHORT).show();
           return true;
         }
         if(frameLayout.findViewById(R.id.captures_list_view) != null) {
@@ -2316,7 +2327,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
     alertDialog.setPositiveButton(getString(R.string.send),
         new DialogInterface.OnClickListener() {
           public void onClick(DialogInterface dialog, int which) {
-            sendCaptureViaHttpTask = new SendCaptureViaHttpTask(selectedPlace);
+            sendCaptureViaHttpTask = new SendCaptureViaHttpTask(selectedCapture);
             sendCaptureViaHttpTask.execute();
           }
         });

@@ -44,4 +44,8 @@ public class MyFileUtils {
   public static boolean fileIsVideo(String fileName) {
     return fileName != null && (fileName.endsWith(".mp4") || fileName.endsWith(".MP4"));
   }
+
+  public static boolean fileIsAudio(String fileName) {
+    return fileName != null && fileName.endsWith(".3gp");
+  }
 }
