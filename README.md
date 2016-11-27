@@ -7,7 +7,7 @@ effects, zoom, exposure compensation and also audio capture. The app is capable 
 
 <img
 src="https://raw.github.com/harismexis/CameraHttp/master/screenshot.png"
-width="700px" height="400px" />
+width="720px" height="400px" />
 
 ## Licence
 
