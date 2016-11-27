@@ -30,7 +30,6 @@ import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -61,6 +60,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
@@ -99,7 +99,6 @@ import eu.cuteapps.camerahttp.myadapters.CapturesAdapter;
 import eu.cuteapps.camerahttp.mysqlite.Capture;
 import eu.cuteapps.camerahttp.mysqlite.MySQLiteCapturesDataSource;
 import eu.cuteapps.camerahttp.myutils.DateUtil;
-import eu.cuteapps.camerahttp.myutils.LogUtils;
 import eu.cuteapps.camerahttp.myutils.ViewUtils;
 import eu.cuteapps.camerahttp.myutils.LocationUtils;
 import eu.cuteapps.camerahttp.myutils.MyFileUtils;
@@ -189,13 +188,13 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
 
   private boolean isFacingBackCamera = true;
 
-  private ImageButton btnZoom;
-  private ImageButton btnReverse;
+  private ImageButton buttonZoom;
+  private ImageButton buttonReverse;
 
-  private ImageButton btnAudioCapture;
+  private ImageButton buttonAudioCapture;
   private boolean isAudioRecording = false;
 
-  private ImageButton buttonTakePicture;
+  private ImageButton buttonPhotoCapture;
   private Camera mCamera;
   private CameraPreview mPreview;
   private FrameLayout frameLayout;
@@ -211,13 +210,13 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
   private boolean isPeriodicCaptureOn = false;
   private int counterPeriodicCapture = 0;
   private boolean infinitePeriodicCapture = false;
-  private ImageButton periodicCaptureButton;
+  private ImageButton buttonPeriodicCapture;
 
-  private ImageButton videoButton;
+  private ImageButton buttonVideoCapture;
   private MediaRecorder mMediaRecorder;
   private boolean isVideoRecording = false;
   private boolean isVideoCameraMode = false;
-  private ImageButton switchPhotoVideoBtn;
+  private ImageButton buttonSwitchPhotoVideo;
 
   private ListView mListViewCaptures;
   private MySQLiteCapturesDataSource datasource;
@@ -244,13 +243,12 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
     datasource = new MySQLiteCapturesDataSource(this);
     datasource.open();
 
-    alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+    alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
     audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
-    activityLayout = (LinearLayout) this.findViewById(R.id.activity_photo_layout);
-    leftControlsLayout = (LinearLayout) this.findViewById(R.id.activity_photo_left_controls);
+    activityLayout = (LinearLayout) findViewById(R.id.activity_photo_layout);
+    leftControlsLayout = (LinearLayout) findViewById(R.id.activity_photo_left_controls);
     frameLayout = (FrameLayout) findViewById(R.id.activity_photo_preview);
-
     frameLayout.setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(View v) {
@@ -264,19 +262,109 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
 
     sendCaptureViaHttpProgressDialog = MyProgressDialogs.getCircleProgressDialog(this,
         getString(R.string.sending_capture_via_http));
-    sendCaptureViaHttpProgressDialog.setOnCancelListener(new OnCancelListener() {
-      @Override
-      public void onCancel(DialogInterface dialog) {
-        if(httpPost != null) {
-          httpPost.abort();
-        }
-        if(sendCaptureViaHttpTask != null &&
-            sendCaptureViaHttpTask.getStatus() != AsyncTask.Status.FINISHED) {
-          sendCaptureViaHttpTask.cancel(true);
-        }
-      }
-    });
+    sendCaptureViaHttpProgressDialog.setOnCancelListener(cancelSendingCaptureListener);
 
+    createCapturesListView();
+
+    buttonZoom = (ImageButton) findViewById(R.id.activity_photo_button_zoom);
+    buttonZoom.setOnClickListener(zoomClickListener);
+
+    buttonReverse = (ImageButton) findViewById(R.id.activity_photo_button_reverse);
+    buttonReverse.setOnClickListener(reverseCameraClickListener);
+
+    buttonAudioCapture = (ImageButton) findViewById(R.id.activity_photo_button_audio_capture);
+    buttonAudioCapture.setOnClickListener(audioCaptureClickListener);
+
+    buttonSwitchPhotoVideo = (ImageButton) findViewById(R.id.activity_photo_switch_video_photo_cam_btn);
+    buttonSwitchPhotoVideo.setOnClickListener(switchPhotoVideoClickListener);
+
+    buttonPhotoCapture = (ImageButton) findViewById(R.id.activity_photo_button_capture);
+    buttonPhotoCapture.setOnClickListener(photoCaptureClickListener);
+
+    buttonPeriodicCapture = (ImageButton) findViewById(R.id.activity_photo_button_periodic_capture);
+    buttonPeriodicCapture.setOnClickListener(periodicPhotoCaptureClickListener);
+    periodicCaptureIntent = new Intent(Actions.ACTION_PERIODIC_CAPTURE);
+    periodicCapturePendingIntent = PendingIntent.getBroadcast(this, 1, periodicCaptureIntent,
+        PendingIntent.FLAG_CANCEL_CURRENT);
+
+    buttonVideoCapture = (ImageButton) findViewById(R.id.activity_photo_button_video);
+    buttonVideoCapture.setOnClickListener(videoCaptureClickListener);
+
+    mImageViewThumbnail = (ImageView) findViewById(R.id.activity_photo_camera_thumbnail);
+    mImageViewThumbnail.setScaleType(ScaleType.FIT_XY);
+    thumbNailTargetWidth = (int) getResources().getDimension(R.dimen.thumbnail_imageview_width);
+    thumbNailTargetHeight = (int) getResources().getDimension(R.dimen.thumbnail_imageview_height);
+    mImageViewThumbnail.setOnClickListener(thumbNailClickListener);
+
+    createCameraSettingsViews();
+    checkIfFrontCameraIsSupported();
+    readParametersOfLastUsedCamera();
+
+    /* Check if camera was in video camera mode so as to update buttons */
+    isVideoCameraMode = PreferenceManager.getDefaultSharedPreferences(this)
+        .getBoolean(Prefs.PREF_IS_VIDEO_CAMERA_MODE, false);
+    if(isVideoCameraMode) {
+      updateButtonsForVideoCameraMode();
+    }
+  }
+
+  @Override
+  public void onStart() {
+    super.onStart();
+    mGoogleApiClient.connect();
+  }
+
+  @Override
+  protected void onResume() {
+    super.onResume();
+    datasource.open();
+    registerReceiver(periodicCaptureReceiver, new IntentFilter(Actions.ACTION_PERIODIC_CAPTURE));
+    initCameraAndPreview();
+    restoreCameraSettingsAndUpdateSettingsViews();
+    restorePreferences();
+    restoreLastCapturedMediaAndSetThumbnail();
+  }
+
+  @Override
+  protected void onPause() {
+    super.onPause();
+    if(isAudioRecording) {
+      stopAudioRecording();
+    }
+    if(isVideoRecording) {
+      stopVideoRecording();
+    }
+    if(isPeriodicCaptureOn) {
+      stopPeriodicCapture();
+    }
+    unregisterReceiver(periodicCaptureReceiver);
+    saveCameraSettings();
+    closeCameraAndPreview();
+    datasource.close();
+    LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+  }
+
+  @Override
+  public void onStop() {
+    mGoogleApiClient.disconnect();
+    super.onStop();
+  }
+
+  private void updateButtonsForVideoCameraMode() {
+    buttonSwitchPhotoVideo.setImageResource(R.mipmap.switch_photo_cam);
+    buttonPhotoCapture.setVisibility(View.GONE);
+    buttonPeriodicCapture.setVisibility(View.GONE);
+    buttonVideoCapture.setVisibility(View.VISIBLE);
+  }
+
+  private void updateButtonsForPhotoCameraMode() {
+    buttonSwitchPhotoVideo.setImageResource(R.mipmap.switch_video_cam);
+    buttonVideoCapture.setVisibility(View.GONE);
+    buttonPhotoCapture.setVisibility(View.VISIBLE);
+    buttonPeriodicCapture.setVisibility(View.VISIBLE);
+  }
+
+  private void createCapturesListView() {
     mListViewCaptures = new ListView(this);
     allCaptures = datasource.getAllModels();
     capturesAdapter = new CapturesAdapter(this, allCaptures);
@@ -285,200 +373,33 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
     mListViewCaptures.setCacheColorHint(ContextCompat.getColor(this, R.color.light_blue));
     mListViewCaptures.setId(R.id.captures_list_view);
     registerForContextMenu(mListViewCaptures);
+  }
 
-    btnZoom = (ImageButton) this.findViewById(R.id.activity_photo_button_zoom);
-    btnReverse = (ImageButton) this.findViewById(R.id.activity_photo_button_reverse);
-    btnAudioCapture = (ImageButton) this.findViewById(R.id.activity_photo_button_audio_capture);
-
-    switchPhotoVideoBtn = (ImageButton) this.findViewById(R.id.activity_photo_switch_video_photo_cam_btn);
-    switchPhotoVideoBtn.setOnClickListener(new OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        if(isPreviewBusy()) {
-          Toast.makeText(PhotoActivity.this, R.string.camera_is_busy, Toast.LENGTH_SHORT).show();
-          return;
-        }
-        try {
-          saveFlashMode();
-          closeCameraAndPreview();
-          resetCameraSettingsViews();
-
-          if(isVideoCameraMode) { /* Switch to photo camera */
-            switchPhotoVideoBtn.setImageResource(R.mipmap.switch_video_cam);
-            periodicCaptureButton.setVisibility(View.VISIBLE);
-            videoButton.setVisibility(View.GONE);
-            buttonTakePicture.setVisibility(View.VISIBLE);
-          } else { /* Switch to video camera */
-            switchPhotoVideoBtn.setImageResource(R.mipmap.switch_photo_cam);
-            periodicCaptureButton.setVisibility(View.GONE);
-            videoButton.setVisibility(View.VISIBLE);
-            buttonTakePicture.setVisibility(View.GONE);
-          }
-
-          isVideoCameraMode = !isVideoCameraMode;
-
-          if(isFacingBackCamera) {
-            mCamera = getCameraInstance(Camera.CameraInfo.CAMERA_FACING_BACK);
-          } else {
-            mCamera = getCameraInstance(Camera.CameraInfo.CAMERA_FACING_FRONT);
-          }
-
-          initCameraPreview();
-
-          /* Update Video / Picture size */
-          if(isVideoCameraMode) {
-            final String selectedVideoSizeToString = String.valueOf(selectedVideoSize.width) +
-                " x " + String.valueOf(selectedVideoSize.height);
-            mListViewVideoSizes.setItemChecked(mVideoSizes.indexOf(selectedVideoSizeToString), true);
-          } else {
-            mCamera.stopPreview();
-            Parameters params = mCamera.getParameters();
-            params.setPictureSize(selectedPictureSize.width, selectedPictureSize.height);
-            mCamera.setParameters(params);
-            mCamera.startPreview();
-
-            final String selectedPictureSizeToString = String.valueOf(selectedPictureSize.width) +
-                " x " + String.valueOf(selectedPictureSize.height);
-            mListViewPictureSizes.setItemChecked(mPictureSizes.indexOf(selectedPictureSizeToString),
-                true);
-          }
-
-          /* Update Flash Mode */
-          if(!isVideoCameraMode && isFlashModeSupported) {
-            final SharedPreferences settings = PreferenceManager
-                .getDefaultSharedPreferences(PhotoActivity.this);
-            mCamera.stopPreview();
-            Parameters params = mCamera.getParameters();
-            params.setFlashMode(settings.getString(Prefs.PREF_PHOTO_CAMERA_FLASH_MODE,
-                Parameters.FLASH_MODE_OFF));
-            mCamera.setParameters(params);
-            mCamera.startPreview();
-          }
-        } catch(Exception e) {
-          Toast.makeText(PhotoActivity.this, R.string.error_switching_photo_video,
-              Toast.LENGTH_SHORT).show();
-        }
-      }
-    });
-
-    buttonTakePicture = (ImageButton) this.findViewById(R.id.activity_photo_button_capture);
-
-    periodicCaptureButton = (ImageButton) findViewById(R.id.activity_photo_button_periodic_capture);
-    periodicCaptureIntent = new Intent(Actions.ACTION_PERIODIC_CAPTURE);
-    periodicCapturePendingIntent = PendingIntent.getBroadcast(this, 1, periodicCaptureIntent,
-        PendingIntent.FLAG_CANCEL_CURRENT);
-
-    videoButton = (ImageButton) findViewById(R.id.activity_photo_button_video);
-    videoButton.setOnClickListener(new OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        if(isVideoRecording) {
-          stopVideoRecording();
-        } else if(isPreviewBusy()) {
-          Toast.makeText(PhotoActivity.this, R.string.camera_is_busy, Toast.LENGTH_SHORT).show();
-        } else {
-          removeSettingsViews();
-          CamcorderProfile camcorderProfile;
-          try {
-            if(isFacingBackCamera && videoCameraFlashMode == CameraConstants.VIDEO_CAMERA_FLASH_MODE_ON) {
-              mCamera.stopPreview();
-              Parameters params = mCamera.getParameters();
-              params.setFlashMode(Parameters.FLASH_MODE_TORCH);
-              mCamera.setParameters(params);
-              mCamera.startPreview();
-            }
-
-            mMediaRecorder = new MediaRecorder();
-            mCamera.unlock();
-            mMediaRecorder.setCamera(mCamera);
-
-            if(isFacingBackCamera) {
-              mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
-              mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
-              camcorderProfile = CamcorderProfile.get(Camera.CameraInfo.CAMERA_FACING_BACK,
-                  CamcorderProfile.QUALITY_HIGH);
-              mMediaRecorder.setProfile(camcorderProfile);
-            } else {
-              mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
-              mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
-              camcorderProfile = CamcorderProfile.get(Camera.CameraInfo.CAMERA_FACING_FRONT,
-                  CamcorderProfile.QUALITY_480P);
-              mMediaRecorder.setProfile(camcorderProfile);
-              mMediaRecorder.setVideoFrameRate(10);
-            }
-
-            mMediaRecorder.setVideoSize(selectedVideoSize.width, selectedVideoSize.height);
-
-            lastCapturedMediaFile = MyFileUtils.getOutputMediaFile(MyFileUtils.MEDIA_TYPE_VIDEO,
-                GalleryFileTypes.MEDIA_FOLDER_NAME);
-
-            if(lastCapturedMediaFile != null) {
-              mMediaRecorder.setOutputFile(lastCapturedMediaFile.toString());
-              sendBroadcast(new Intent( /* Add video to gallery */
-                  Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
-                  Uri.fromFile(lastCapturedMediaFile)));
-            } else {
-              Toast.makeText(PhotoActivity.this,
-                  getString(R.string.error_creating_video_file), Toast.LENGTH_SHORT).show();
-            }
-
-            mMediaRecorder.setPreviewDisplay(mPreview.getHolder().getSurface());
-            mMediaRecorder.prepare();
-            mMediaRecorder.start();
-          } catch(Exception e) {
-            releaseMediaRecorder();
-            Toast.makeText(PhotoActivity.this, R.string.error_recording_video,
-                Toast.LENGTH_SHORT).show();
-            return;
-          }
-
-          videoButton.setImageResource(R.mipmap.stop);
-          isVideoRecording = true;
-          new SaveCaptureTask().execute(Capture.CAPTURE_TYPE_VIDEO);
-        }
-      }
-    });
-
-    mImageViewThumbnail = (ImageView) findViewById(R.id.activity_photo_camera_thumbnail);
-    mImageViewThumbnail.setScaleType(ScaleType.FIT_XY);
-    thumbNailTargetWidth = (int) getResources().getDimension(R.dimen.thumbnail_imageview_width);
-    thumbNailTargetHeight = (int) getResources().getDimension(R.dimen.thumbnail_imageview_height);
-    mImageViewThumbnail.setOnClickListener(new OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        if(lastCapturedMediaFile == null) {
-          Toast.makeText(PhotoActivity.this, R.string.no_captured_media_file_found,
-              Toast.LENGTH_SHORT).show();
-          return;
-        }
-        openMediaInGallery(lastCapturedMediaFile);
-      }
-    });
-
-    createCameraSettingsViews();
-
-    /* Check if hardware supports front camera */
+  private void checkIfFrontCameraIsSupported() {
     Camera c = null;
     try {
       c = getCameraInstance(Camera.CameraInfo.CAMERA_FACING_FRONT);
       if(c == null) {
         isFrontCameraSupported = false;
-        btnReverse.setEnabled(false);
+        buttonReverse.setEnabled(false);
       } else {
         isFrontCameraSupported = true;
-        btnReverse.setEnabled(true);
+        buttonReverse.setEnabled(true);
       }
     } catch(Exception e) {
+      Log.w(TAG, e.getMessage());
       isFrontCameraSupported = false;
-      btnReverse.setEnabled(false);
+      buttonReverse.setEnabled(false);
       Toast.makeText(this, R.string.error_checking_for_front_camera, Toast.LENGTH_LONG).show();
     } finally {
       if(c != null) {
         c.release();
       }
     }
+  }
 
-    /* Get last used camera to read its parameters */
+  private void readParametersOfLastUsedCamera() {
+    Camera c;
     if(PreferenceManager.getDefaultSharedPreferences(this)
         .getBoolean(Prefs.PREF_IS_FACING_BACK_CAMERA, true)) {
       c = getCameraInstance(Camera.CameraInfo.CAMERA_FACING_BACK);
@@ -486,18 +407,285 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       c = getCameraInstance(Camera.CameraInfo.CAMERA_FACING_FRONT);
     }
     readCameraSettingsAndSetUpSettingsViews(c);
-    c.release();
-
-    /* Check if camera was in video camera mode so as to update buttons */
-    isVideoCameraMode = PreferenceManager.getDefaultSharedPreferences(this)
-        .getBoolean(Prefs.PREF_IS_VIDEO_CAMERA_MODE, false);
-    if(isVideoCameraMode) {
-      switchPhotoVideoBtn.setImageResource(R.mipmap.switch_photo_cam);
-      buttonTakePicture.setVisibility(View.GONE);
-      periodicCaptureButton.setVisibility(View.GONE);
-      videoButton.setVisibility(View.VISIBLE);
+    if(c != null) {
+      c.release();
     }
   }
+
+  private final View.OnClickListener zoomClickListener = new View.OnClickListener() {
+    @Override
+    public void onClick(View view) {
+      if(isPreviewBusy()) {
+        Toast.makeText(PhotoActivity.this, R.string.camera_is_busy, Toast.LENGTH_SHORT).show();
+        return;
+      }
+      if(frameLayout.findViewById(R.id.the_zoom_layout) != null) {
+        frameLayout.removeView(mZoomBarLayout);
+      } else {
+        removeSettingsViews();
+        frameLayout.addView(mZoomBarLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
+            LayoutParams.WRAP_CONTENT));
+      }
+    }
+  };
+
+  private final View.OnClickListener reverseCameraClickListener = new View.OnClickListener() {
+    @Override
+    public void onClick(View view) {
+      if(isPreviewBusy()) {
+        Toast.makeText(PhotoActivity.this, R.string.camera_is_busy, Toast.LENGTH_SHORT).show();
+        return;
+      }
+
+      if(!isFrontCameraSupported) {
+        Toast.makeText(PhotoActivity.this, R.string.front_camera_is_not_supported,
+            Toast.LENGTH_SHORT).show();
+        return;
+      }
+
+      try {
+        if(!isVideoCameraMode && isFacingBackCamera) {
+          final SharedPreferences settings = PreferenceManager
+              .getDefaultSharedPreferences(PhotoActivity.this);
+          SharedPreferences.Editor editor = settings.edit();
+          editor.putString(Prefs.PREF_PHOTO_CAMERA_FLASH_MODE, mCamera.getParameters()
+              .getFlashMode());
+          editor.apply();
+        }
+        savePictureAndVideoSize();
+        closeCameraAndPreview();
+
+        /* Reverse camera */
+        if(isFacingBackCamera) {
+          mCamera = getCameraInstance(Camera.CameraInfo.CAMERA_FACING_FRONT);
+        } else {
+          mCamera = getCameraInstance(Camera.CameraInfo.CAMERA_FACING_BACK);
+        }
+
+        isFacingBackCamera = !isFacingBackCamera;
+
+        initCameraPreview();
+        mCamera.stopPreview();
+        readCameraSettingsAndSetUpSettingsViews(mCamera);
+        restorePictureAndVideoSize();
+
+        /* Restore Photo Camera Flash Mode */
+        if(!isVideoCameraMode && isFacingBackCamera) {
+          final SharedPreferences settings = PreferenceManager
+              .getDefaultSharedPreferences(PhotoActivity.this);
+          Parameters params = mCamera.getParameters();
+          params.setFlashMode(settings.getString(Prefs.PREF_PHOTO_CAMERA_FLASH_MODE,
+              Parameters.FLASH_MODE_OFF));
+          mCamera.setParameters(params);
+        }
+        mCamera.startPreview();
+      } catch(Exception e) {
+        Log.w(TAG, e.getMessage());
+        Toast.makeText(PhotoActivity.this, R.string.error_reversing_camera,
+            Toast.LENGTH_LONG).show();
+      }
+    }
+  };
+
+  private final View.OnClickListener audioCaptureClickListener = new View.OnClickListener() {
+    @Override
+    public void onClick(View view) {
+      if(isAudioRecording) {
+        stopAudioRecording();
+      } else if(isPreviewBusy()) {
+        Toast.makeText(PhotoActivity.this, R.string.camera_is_busy, Toast.LENGTH_SHORT).show();
+      } else {
+        startAudioRecording();
+      }
+    }
+  };
+
+  private final View.OnClickListener switchPhotoVideoClickListener = new View.OnClickListener() {
+    @Override
+    public void onClick(View v) {
+      if(isPreviewBusy()) {
+        Toast.makeText(PhotoActivity.this, R.string.camera_is_busy, Toast.LENGTH_SHORT).show();
+        return;
+      }
+      try {
+        saveFlashMode();
+        closeCameraAndPreview();
+        resetCameraSettingsViews();
+
+        if(isVideoCameraMode) {
+          updateButtonsForPhotoCameraMode(); /* Switch to photo camera */
+        } else {
+          updateButtonsForVideoCameraMode(); /* Switch to video camera */
+        }
+
+        isVideoCameraMode = !isVideoCameraMode;
+
+        if(isFacingBackCamera) {
+          mCamera = getCameraInstance(Camera.CameraInfo.CAMERA_FACING_BACK);
+        } else {
+          mCamera = getCameraInstance(Camera.CameraInfo.CAMERA_FACING_FRONT);
+        }
+
+        initCameraPreview();
+
+        /* Update Video / Picture size */
+        if(isVideoCameraMode) {
+          final String selectedVideoSizeToString = String.valueOf(selectedVideoSize.width) +
+              " x " + String.valueOf(selectedVideoSize.height);
+          mListViewVideoSizes.setItemChecked(mVideoSizes.indexOf(selectedVideoSizeToString), true);
+        } else {
+          mCamera.stopPreview();
+          Parameters params = mCamera.getParameters();
+          params.setPictureSize(selectedPictureSize.width, selectedPictureSize.height);
+          mCamera.setParameters(params);
+          mCamera.startPreview();
+
+          final String selectedPictureSizeToString = String.valueOf(selectedPictureSize.width) +
+              " x " + String.valueOf(selectedPictureSize.height);
+          mListViewPictureSizes.setItemChecked(mPictureSizes.indexOf(selectedPictureSizeToString),
+              true);
+        }
+
+        /* Update Flash Mode */
+        if(!isVideoCameraMode && isFlashModeSupported) {
+          final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(
+              PhotoActivity.this);
+          mCamera.stopPreview();
+          Parameters params = mCamera.getParameters();
+          params.setFlashMode(settings.getString(Prefs.PREF_PHOTO_CAMERA_FLASH_MODE,
+              Parameters.FLASH_MODE_OFF));
+          mCamera.setParameters(params);
+          mCamera.startPreview();
+        }
+      } catch(Exception e) {
+        Log.w(TAG, e.getMessage());
+        Toast.makeText(PhotoActivity.this, R.string.error_switching_photo_video,
+            Toast.LENGTH_SHORT).show();
+      }
+    }
+  };
+
+  private final View.OnClickListener photoCaptureClickListener = new View.OnClickListener() {
+    @Override
+    public void onClick(View view) {
+      if(isPreviewBusy()) {
+        Toast.makeText(PhotoActivity.this, R.string.camera_is_busy, Toast.LENGTH_SHORT).show();
+        return;
+      }
+      capturePhoto();
+    }
+  };
+
+  private final View.OnClickListener periodicPhotoCaptureClickListener = new View.OnClickListener() {
+    @Override
+    public void onClick(View view) {
+      if(isPeriodicCaptureOn) {
+        stopPeriodicCapture();
+      } else if(isPreviewBusy()) {
+        Toast.makeText(PhotoActivity.this, R.string.camera_is_busy, Toast.LENGTH_SHORT).show();
+      } else {
+        showAlertDialogForPeriodicCapture();
+      }
+    }
+  };
+
+  private final View.OnClickListener videoCaptureClickListener = new View.OnClickListener() {
+    @Override
+    public void onClick(View v) {
+      if(isVideoRecording) {
+        stopVideoRecording();
+      } else if(isPreviewBusy()) {
+        Toast.makeText(PhotoActivity.this, R.string.camera_is_busy, Toast.LENGTH_SHORT).show();
+      } else {
+        removeSettingsViews();
+        CamcorderProfile camcorderProfile;
+        try {
+          if(isFacingBackCamera &&
+              videoCameraFlashMode == CameraConstants.VIDEO_CAMERA_FLASH_MODE_ON) {
+            mCamera.stopPreview();
+            Parameters params = mCamera.getParameters();
+            params.setFlashMode(Parameters.FLASH_MODE_TORCH);
+            mCamera.setParameters(params);
+            mCamera.startPreview();
+          }
+
+          mMediaRecorder = new MediaRecorder();
+          mCamera.unlock();
+          mMediaRecorder.setCamera(mCamera);
+
+          if(isFacingBackCamera) {
+            mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
+            mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+            camcorderProfile = CamcorderProfile.get(Camera.CameraInfo.CAMERA_FACING_BACK,
+                CamcorderProfile.QUALITY_HIGH);
+            mMediaRecorder.setProfile(camcorderProfile);
+          } else {
+            mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
+            mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+            camcorderProfile = CamcorderProfile.get(Camera.CameraInfo.CAMERA_FACING_FRONT,
+                CamcorderProfile.QUALITY_480P);
+            mMediaRecorder.setProfile(camcorderProfile);
+            mMediaRecorder.setVideoFrameRate(CameraConstants.VIDEO_FRAME_RATE);
+          }
+
+          mMediaRecorder.setVideoSize(selectedVideoSize.width, selectedVideoSize.height);
+
+          lastCapturedMediaFile = MyFileUtils.getOutputMediaFile(MyFileUtils.MEDIA_TYPE_VIDEO,
+              GalleryFileTypes.MEDIA_FOLDER_NAME);
+
+          if(lastCapturedMediaFile != null) {
+            mMediaRecorder.setOutputFile(lastCapturedMediaFile.toString());
+            sendBroadcast(new Intent( /* Add video to gallery */
+                Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
+                Uri.fromFile(lastCapturedMediaFile)));
+          } else {
+            Toast.makeText(PhotoActivity.this,
+                getString(R.string.error_creating_video_file), Toast.LENGTH_SHORT).show();
+          }
+
+          mMediaRecorder.setPreviewDisplay(mPreview.getHolder().getSurface());
+          mMediaRecorder.prepare();
+          mMediaRecorder.start();
+        } catch(Exception e) {
+          Log.w(TAG, e.getMessage());
+          releaseMediaRecorder();
+          Toast.makeText(PhotoActivity.this, R.string.error_recording_video,
+              Toast.LENGTH_SHORT).show();
+          return;
+        }
+
+        buttonVideoCapture.setImageResource(R.mipmap.stop);
+        isVideoRecording = true;
+        new SaveCaptureTask().execute(Capture.CAPTURE_TYPE_VIDEO);
+      }
+    }
+  };
+
+  private final View.OnClickListener thumbNailClickListener = new View.OnClickListener() {
+    @Override
+    public void onClick(View view) {
+      if(lastCapturedMediaFile == null) {
+        Toast.makeText(PhotoActivity.this, R.string.no_captured_media_file_found,
+            Toast.LENGTH_SHORT).show();
+        return;
+      }
+      openMediaInGallery(lastCapturedMediaFile);
+    }
+  };
+
+  private final DialogInterface.OnCancelListener cancelSendingCaptureListener =
+      new DialogInterface.OnCancelListener() {
+        @Override
+        public void onCancel(DialogInterface dialog) {
+          if(httpPost != null) {
+            httpPost.abort();
+          }
+          if(sendCaptureViaHttpTask != null &&
+              sendCaptureViaHttpTask.getStatus() != AsyncTask.Status.FINISHED) {
+            sendCaptureViaHttpTask.cancel(true);
+          }
+        }
+      };
 
   private void openMediaInGallery(File mediaFile) {
     if(isPreviewBusy()) {
@@ -694,6 +882,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
             Toast.makeText(PhotoActivity.this, userMessage, Toast.LENGTH_LONG).show();
           }
         } catch(Exception e) {
+          Log.w(TAG, e.getMessage());
           Toast.makeText(PhotoActivity.this, R.string.error_setting_scene_mode,
               Toast.LENGTH_SHORT).show();
         }
@@ -760,6 +949,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
             Toast.makeText(PhotoActivity.this, userMessage, Toast.LENGTH_LONG).show();
           }
         } catch(Exception e) {
+          Log.w(TAG, e.getMessage());
           Toast.makeText(PhotoActivity.this, R.string.error_setting_white_balance,
               Toast.LENGTH_SHORT).show();
         }
@@ -825,6 +1015,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
             Toast.makeText(PhotoActivity.this, userMessage, Toast.LENGTH_LONG).show();
           }
         } catch(Exception e) {
+          Log.w(TAG, e.getMessage());
           Toast.makeText(PhotoActivity.this, R.string.error_setting_color_effect,
               Toast.LENGTH_LONG).show();
         }
@@ -861,6 +1052,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
           mCamera.setParameters(p);
           mCamera.startPreview();
         } catch(Exception e) {
+          Log.w(TAG, e.getMessage());
           Toast.makeText(PhotoActivity.this, R.string.error_setting_picture_size,
               Toast.LENGTH_SHORT).show();
         }
@@ -892,6 +1084,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
             }
           }
         } catch(Exception e) {
+          Log.w(TAG, e.getMessage());
           Toast.makeText(PhotoActivity.this, R.string.error_updating_video_size,
               Toast.LENGTH_SHORT).show();
         }
@@ -923,7 +1116,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
     if(p.isZoomSupported()) {
       defaultZoom = p.getZoom();
       maxZoom = p.getMaxZoom();
-      btnZoom.setEnabled(true);
+      buttonZoom.setEnabled(true);
       isZoomSupported = true;
 
       if(zoomBar != null) {
@@ -933,7 +1126,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       }
     } else {
       isZoomSupported = false;
-      btnZoom.setEnabled(false);
+      buttonZoom.setEnabled(false);
     }
 
     /* Exposure compensation */
@@ -1119,8 +1312,8 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
     final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
     if(isPictureSizeSupported) {
-      int lastPictureSizeWidth = -1;
-      int lastPictureSizeHeight = -1;
+      int lastPictureSizeWidth;
+      int lastPictureSizeHeight;
 
       if(isFacingBackCamera) {
         lastPictureSizeWidth = prefs.getInt(Prefs.PREF_BACK_CAMERA_PICTURE_SIZE_WIDTH,
@@ -1151,8 +1344,8 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
     }
 
     if(isVideoSizeSupported) {
-      int lastVideoSizeWidth = -1;
-      int lastVideoSizeHeight = -1;
+      int lastVideoSizeWidth;
+      int lastVideoSizeHeight;
 
       if(isFacingBackCamera) {
         lastVideoSizeWidth = prefs.getInt(Prefs.PREF_BACK_CAMERA_VIDEO_SIZE_WIDTH,
@@ -1311,6 +1504,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
     try {
       captureIntervalInSec = Integer.parseInt(captureIntervalToString);
     } catch(Exception e) {
+      Log.w(TAG, e.getMessage());
       captureIntervalInSec = DEFAULT_CAPTURE_INTERVAL_IN_SEC;
     }
 
@@ -1318,6 +1512,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       delayAfterCapture = ONE_SECOND_IN_MILLIS * Integer.parseInt(settings
           .getString(Prefs.PREF_DELAY_AFTER_CAPTURE, "1"));
     } catch(Exception e) {
+      Log.w(TAG, e.getMessage());
       delayAfterCapture = ONE_SECOND_IN_MILLIS;
     }
 
@@ -1361,48 +1556,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
   }
 
   @Override
-  public void onStart() {
-    super.onStart();
-    mGoogleApiClient.connect();
-  }
-
-  @Override
-  protected void onResume() {
-    super.onResume();
-    datasource.open();
-    registerReceiver(periodicCaptureReceiver, new IntentFilter(Actions.ACTION_PERIODIC_CAPTURE));
-    initCameraAndPreview();
-    restoreCameraSettingsAndUpdateSettingsViews();
-    restorePreferences();
-    restoreLastCapturedMediaAndSetThumbnail();
-  }
-
-  @Override
-  protected void onPause() {
-    super.onPause();
-    if(isAudioRecording) {
-      stopAudioRecording();
-    }
-    if(isVideoRecording) {
-      stopVideoRecording();
-    }
-    if(isPeriodicCaptureOn) {
-      stopPeriodicCapture();
-    }
-    unregisterReceiver(periodicCaptureReceiver);
-    saveCameraSettings();
-    closeCameraAndPreview();
-    datasource.close();
-    LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-  }
-
-  @Override
-  public void onStop() {
-    mGoogleApiClient.disconnect();
-    super.onStop();
-  }
-
-  @Override
   public void onBackPressed() {
     if(!removeSettingsViews()) {
       super.onBackPressed();
@@ -1414,6 +1567,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
     try {
       camera = Camera.open(cameraId);
     } catch(Exception e) {
+      Log.w(TAG, e.getMessage());
       return null;
     }
     return camera;
@@ -1444,55 +1598,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
     }
   }
 
-  public void onClickReverseCamera(View view) {
-    if(isPreviewBusy()) {
-      Toast.makeText(this, R.string.camera_is_busy, Toast.LENGTH_SHORT).show();
-      return;
-    }
-
-    if(!isFrontCameraSupported) {
-      Toast.makeText(this, R.string.front_camera_is_not_supported, Toast.LENGTH_SHORT).show();
-      return;
-    }
-
-    /* Reverse camera */
-    try {
-      if(!isVideoCameraMode && isFacingBackCamera) {
-        final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor editor = settings.edit();
-        editor.putString(Prefs.PREF_PHOTO_CAMERA_FLASH_MODE, mCamera.getParameters().getFlashMode());
-        editor.apply();
-      }
-      savePictureAndVideoSize();
-      closeCameraAndPreview();
-
-      if(isFacingBackCamera) {
-        mCamera = getCameraInstance(Camera.CameraInfo.CAMERA_FACING_FRONT);
-      } else {
-        mCamera = getCameraInstance(Camera.CameraInfo.CAMERA_FACING_BACK);
-      }
-
-      isFacingBackCamera = !isFacingBackCamera;
-
-      initCameraPreview();
-      mCamera.stopPreview();
-      readCameraSettingsAndSetUpSettingsViews(mCamera);
-      restorePictureAndVideoSize();
-
-      /* Restore Photo Camera Flash Mode */
-      if(!isVideoCameraMode && isFacingBackCamera) {
-        final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-        Parameters params = mCamera.getParameters();
-        params.setFlashMode(settings.getString(Prefs.PREF_PHOTO_CAMERA_FLASH_MODE,
-            Parameters.FLASH_MODE_OFF));
-        mCamera.setParameters(params);
-      }
-      mCamera.startPreview();
-    } catch(Exception e) {
-      Toast.makeText(this, R.string.error_reversing_camera, Toast.LENGTH_LONG).show();
-    }
-  }
-
   private boolean isPreviewBusy() {
     return isCapturingPhoto || isAudioRecording || isVideoRecording || isPeriodicCaptureOn;
   }
@@ -1512,7 +1617,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
   private class CapturePhotoTask extends AsyncTask<Void, Void, Void> {
     @Override
     protected void onPreExecute() {
-      buttonTakePicture.setEnabled(false);
+      buttonPhotoCapture.setEnabled(false);
       isCapturingPhoto = true;
     }
 
@@ -1531,8 +1636,9 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
         e.printStackTrace();
       }
 
-      /* Store Capture to database */
-      final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(PhotoActivity.this);
+      /* Save Capture in database */
+      final SharedPreferences settings = PreferenceManager
+          .getDefaultSharedPreferences(PhotoActivity.this);
       if(settings.getString(Prefs.PREF_STORE_CAPTURES_TO_DB, "yes").equals("yes")) {
         try {
           datasource.addCaptureToDatabase(
@@ -1544,7 +1650,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
           allCaptures.clear();
           allCaptures.addAll(datasource.getAllModels());
         } catch(Exception e) {
-          LogUtils.log(TAG, e.getMessage());
+          Log.w(TAG, e.getMessage());
         }
       }
       return null;
@@ -1558,7 +1664,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
 
       mCamera.startPreview();
       isCapturingPhoto = false;
-      buttonTakePicture.setEnabled(true);
+      buttonPhotoCapture.setEnabled(true);
 
       /* If periodic capture is enabled, continue capturing */
       if(isPeriodicCaptureOn) {
@@ -1574,7 +1680,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
           }
         }
 
-        /* Set next capture */
+        /* Schedule next capture */
         alarmManager.set(AlarmManager.RTC_WAKEUP,
             System.currentTimeMillis() + captureIntervalInSec * ONE_SECOND_IN_MILLIS,
             periodicCapturePendingIntent);
@@ -1601,18 +1707,10 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
           audioManager.setStreamMute(AudioManager.STREAM_SYSTEM, false);
         }
       } catch(Exception e) {
-
+        Log.w(TAG, e.getMessage());
       }
     }
   };
-
-  public void onClickCapturePhoto(View view) {
-    if(isPreviewBusy()) {
-      Toast.makeText(this, R.string.camera_is_busy, Toast.LENGTH_SHORT).show();
-      return;
-    }
-    capturePhoto();
-  }
 
   private void capturePhoto() {
     removeSettingsViews();
@@ -1643,6 +1741,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
           lastCapturedMediaFile = null;
         }
       } catch(Exception e) {
+        Log.w(TAG, e.getMessage());
         Toast.makeText(this, R.string.error_restoring_thumbnail_icon, Toast.LENGTH_SHORT).show();
         return;
       }
@@ -1690,16 +1789,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
     }
   }
 
-  public void onClickStartPeriodicCapture(View view) {
-    if(isPeriodicCaptureOn) {
-      stopPeriodicCapture();
-    } else if(isPreviewBusy()) {
-      Toast.makeText(this, R.string.camera_is_busy, Toast.LENGTH_SHORT).show();
-    } else {
-      showAlertDialogForPeriodicCapture();
-    }
-  }
-
   private BroadcastReceiver periodicCaptureReceiver = new BroadcastReceiver() {
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -1712,7 +1801,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
   private void startPeriodicCapture(boolean isInfinite) {
     infinitePeriodicCapture = isInfinite;
     isPeriodicCaptureOn = true;
-    periodicCaptureButton.setImageResource(R.mipmap.stop);
+    buttonPeriodicCapture.setImageResource(R.mipmap.stop);
     Toast.makeText(this,
         getString(R.string.periodic_capture_started_with_interval,
             String.valueOf(captureIntervalInSec)),
@@ -1723,7 +1812,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
   private void stopPeriodicCapture() {
     isPeriodicCaptureOn = false;
     infinitePeriodicCapture = false;
-    periodicCaptureButton.setImageResource(R.mipmap.repeat);
+    buttonPeriodicCapture.setImageResource(R.mipmap.repeat);
   }
 
   private void showAlertDialogForPeriodicCapture() {
@@ -1741,6 +1830,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
             try {
               counterPeriodicCapture = Integer.parseInt(input.getText().toString());
             } catch(Exception e) {
+              Log.w(TAG, e.getMessage());
               Toast.makeText(PhotoActivity.this, R.string.please_enter_a_positive_integer,
                   Toast.LENGTH_SHORT).show();
               return;
@@ -1786,7 +1876,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
           allCaptures.clear();
           allCaptures.addAll(datasource.getAllModels());
         } catch(Exception e) {
-          LogUtils.log(TAG, e.getMessage());
+          Log.w(TAG, e.getMessage());
         }
       }
       return null;
@@ -1812,7 +1902,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
         mCamera.startPreview();
       }
     }
-    videoButton.setImageResource(R.mipmap.red_rect);
+    buttonVideoCapture.setImageResource(R.mipmap.red_rect);
     isVideoRecording = false;
     setThumbnailPicFromVideo();
   }
@@ -1826,16 +1916,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
     }
   }
 
-  public void onClickCaptureAudio(View view) {
-    if(isAudioRecording) {
-      stopAudioRecording();
-    } else if(isPreviewBusy()) {
-      Toast.makeText(this, R.string.camera_is_busy, Toast.LENGTH_SHORT).show();
-    } else {
-      startAudioRecording();
-    }
-  }
-
   private void releaseAudioRecorder() {
     if(mMediaRecorder != null) {
       mMediaRecorder.stop();
@@ -1846,7 +1926,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
 
   private void stopAudioRecording() {
     releaseAudioRecorder();
-    btnAudioCapture.setImageResource(R.mipmap.mic);
+    buttonAudioCapture.setImageResource(R.mipmap.mic);
     isAudioRecording = false;
     setThumbnailPicFromAudio();
   }
@@ -1868,28 +1948,15 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
       mMediaRecorder.prepare();
       mMediaRecorder.start();
     } catch(Exception e) {
+      Log.w(TAG, e.getMessage());
       releaseAudioRecorder();
       Toast.makeText(this, R.string.error_starting_audio_recording, Toast.LENGTH_SHORT).show();
       return;
     }
 
-    btnAudioCapture.setImageResource(R.mipmap.mic_stop);
+    buttonAudioCapture.setImageResource(R.mipmap.mic_stop);
     isAudioRecording = true;
     new SaveCaptureTask().execute(Capture.CAPTURE_TYPE_AUDIO);
-  }
-
-  public void onClickHandleZoom(View view) {
-    if(isPreviewBusy()) {
-      Toast.makeText(this, R.string.camera_is_busy, Toast.LENGTH_SHORT).show();
-      return;
-    }
-    if(frameLayout.findViewById(R.id.the_zoom_layout) != null) {
-      frameLayout.removeView(mZoomBarLayout);
-    } else {
-      removeSettingsViews();
-      frameLayout.addView(mZoomBarLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
-          LayoutParams.WRAP_CONTENT));
-    }
   }
 
   private boolean removeSettingsViews() {
@@ -1930,6 +1997,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
             try {
               resetCameraSettingsAndSettingsViews();
             } catch(Exception e) {
+              Log.w(TAG, e.getMessage());
               Toast.makeText(PhotoActivity.this, R.string.error_resetting_camera,
                   Toast.LENGTH_SHORT).show();
             }
@@ -2045,7 +2113,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
   @Override
   public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
     super.onCreateContextMenu(menu, v, menuInfo);
-    this.getMenuInflater().inflate(R.menu.context_places, menu);
+    getMenuInflater().inflate(R.menu.context_places, menu);
   }
 
   @Override
@@ -2072,6 +2140,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
           final float lon = Float.parseFloat(selectedCapture.getLongitude());
           uri = String.format(Locale.ENGLISH, "geo:%f,%f", lat, lon);
         } catch(Exception e) {
+          Log.w(TAG, e.getMessage());
           Toast.makeText(PhotoActivity.this, R.string.unknown_location, Toast.LENGTH_SHORT).show();
           return false;
         }
@@ -2109,6 +2178,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
               Toast.makeText(PhotoActivity.this, getString(R.string.capture_deleted),
                   Toast.LENGTH_SHORT).show();
             } catch(Exception e) {
+              Log.w(TAG, e.getMessage());
               Toast.makeText(PhotoActivity.this, getString(R.string.error_deleting_capture),
                   Toast.LENGTH_SHORT).show();
             }
@@ -2135,6 +2205,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
               Toast.makeText(PhotoActivity.this, getString(R.string.all_captures_deleted),
                   Toast.LENGTH_SHORT).show();
             } catch(Exception e) {
+              Log.w(TAG, e.getMessage());
               Toast.makeText(PhotoActivity.this, getString(R.string.error_deleting_captures),
                   Toast.LENGTH_SHORT).show();
             }
@@ -2291,14 +2362,14 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
         return true;
 
       case R.id.camera_menu_left_controls_show:
-        if(this.findViewById(R.id.activity_photo_left_controls) == null) {
+        if(findViewById(R.id.activity_photo_left_controls) == null) {
           activityLayout.addView(leftControlsLayout, 0);
           item.setChecked(true);
         }
         return true;
 
       case R.id.camera_menu_left_controls_hide:
-        if(this.findViewById(R.id.activity_photo_left_controls) != null) {
+        if(findViewById(R.id.activity_photo_left_controls) != null) {
           activityLayout.removeView(leftControlsLayout);
           item.setChecked(true);
         }
@@ -2389,6 +2460,7 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
 
         res = httpClient.execute(httpPost);
       } catch(Exception e) {
+        Log.w(TAG, e.getMessage());
         return null;
       }
       return res;

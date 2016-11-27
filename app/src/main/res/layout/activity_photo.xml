@@ -29,7 +29,6 @@
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:contentDescription="@string/camera_img_btn"
-                android:onClick="onClickHandleZoom"
                 android:src="@mipmap/zoom"/>
         </LinearLayout>
 
@@ -45,7 +44,6 @@
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:contentDescription="@string/camera_img_btn"
-                android:onClick="onClickReverseCamera"
                 android:src="@mipmap/switch_camera"/>
         </LinearLayout>
 
@@ -61,7 +59,6 @@
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:contentDescription="@string/camera_img_btn"
-                android:onClick="onClickCaptureAudio"
                 android:src="@mipmap/mic"/>
         </LinearLayout>
 
@@ -111,7 +108,6 @@
                 android:layout_width="60dp"
                 android:layout_height="100dp"
                 android:contentDescription="@string/camera_img_btn"
-                android:onClick="onClickCapturePhoto"
                 android:src="@mipmap/camera"/>
 
             <ImageButton
@@ -120,7 +116,6 @@
                 android:layout_height="60dp"
                 android:layout_marginTop="10dp"
                 android:contentDescription="@string/camera_img_btn"
-                android:onClick="onClickStartPeriodicCapture"
                 android:src="@mipmap/repeat"/>
         </LinearLayout>
 
