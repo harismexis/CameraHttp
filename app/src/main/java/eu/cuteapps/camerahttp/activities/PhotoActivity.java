@@ -300,7 +300,6 @@ public class PhotoActivity extends AppCompatActivity implements ConnectionCallba
     checkIfFrontCameraIsSupported();
     readParametersOfLastUsedCamera();
 
-    /* Check if camera was in video camera mode so as to update buttons */
     isVideoCameraMode = PreferenceManager.getDefaultSharedPreferences(this)
         .getBoolean(Prefs.PREF_IS_VIDEO_CAMERA_MODE, false);
     if(isVideoCameraMode) {
