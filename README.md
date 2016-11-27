@@ -5,7 +5,9 @@ functionalities of a camera, such as photo capture, repeated photo capture, vide
 effects, zoom, exposure compensation and also audio capture. The app is capable of sending a capture
 (media file and location parameters) via HTTP to a url specified by the user.
 
-<img src="https://raw.github.com/harismexis/CameraHttp/master/screenshot.png" width="200px" height="200px" />
+<img
+src="https://raw.github.com/harismexis/CameraHttp/master/screenshot.png"
+width="1000px" height="700px" />
 
 ## Licence
 
